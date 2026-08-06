@@ -18,6 +18,7 @@ It is a useful architecture sketch but is not currently functional.
   Node 22 verification remains the merge gate (local host is Node 26).
 - Build/typecheck: `@sovereign-apps/protocol` passes after SA-002; full workspace remains gated by parallel tasks.
 - Protocol tests: five non-empty Node test groups pass, including fragmentation and hostile-input cases.
+- SA-007 module kernel is implemented and tested; concrete platform adapters remain pending.
 - Lint: fails because the current prototype web app launches interactive setup.
 - Desktop/mobile pairing: not end-to-end wired or verified.
 - Wi-Fi module: serialization helpers only; no advertiser or browser runtime.

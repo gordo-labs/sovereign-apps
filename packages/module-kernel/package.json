@@ -1,0 +1,23 @@
+{
+  "name": "@sovereign-apps/module-kernel",
+  "version": "0.0.1",
+  "description": "Neutral lifecycle and composition contracts for sovereign app communication modules",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm build && node --test test/*.test.ts",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": { "typescript": "^5.6" }
+}

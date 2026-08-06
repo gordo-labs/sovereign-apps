@@ -40,6 +40,12 @@ No discovery or bootstrap adapter grants trust. No transport adapter interprets
 application payloads. Capability identifiers are bounded, opaque strings owned
 by the generated application.
 
+The `@sovereign-apps/module-kernel` package codifies these boundaries as public
+root exports. Its registry preflights composition and starts dependencies before
+dependents; optional modules are reported as degraded without falsifying core
+readiness. Adapters own their resources and must pass lifecycle/cancellation
+conformance before they are usable by platform packages.
+
 ## Initial pairing flow
 
 ```text
