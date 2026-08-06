@@ -10,7 +10,16 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  FlatList,
+  StyleSheet,
+  ScrollView,
+  Linking,
+} from 'react-native';
 import { startSovereignPeer, getMessageLog, getNodeId } from './index.js';
 import { MobilePairingClient, type PairingEvent } from './hub-pairing.js';
 import { PairingQrCamera } from './PairingQrCamera.js';
@@ -85,6 +94,19 @@ export function App(): React.JSX.Element {
       `[fingerprint] ${result.fingerprint} — verify it matches the desktop screen`,
     ]);
   }, []);
+
+  // A desktop can hand off the same payload through a custom scheme or web link.
+  useEffect(() => {
+    let mounted = true;
+    void Linking.getInitialURL().then((url) => {
+      if (mounted && url) handlePairingInput(url);
+    });
+    const subscription = Linking.addEventListener('url', ({ url }) => handlePairingInput(url));
+    return () => {
+      mounted = false;
+      subscription.remove();
+    };
+  }, [handlePairingInput]);
 
   const handleQrSubmit = useCallback(
     () => handlePairingInput(qrInput),
