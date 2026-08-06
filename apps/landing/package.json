@@ -1,18 +1,20 @@
 {
-  "name": "@sovereign-apps/landing",
+  "name": "@sovereign-apps/web-presence-example",
   "version": "0.0.1",
   "description": "Optional Next.js web-presence integration example",
+  "type": "module",
   "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint src",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@sovereign-apps/protocol": "workspace:*",
+    "@sovereign-apps/web-presence": "workspace:*",
     "next": "^15",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
