@@ -246,23 +246,11 @@ class NativeTransportSession implements TransportSession {
   async openStream(options: { signal?: AbortSignal } = {}): Promise<FramedStream> {
     if (this.closed) throw new ReactNativeTransportError('CLOSED', 'Session is closed');
     const connection = await raceAbort(this.session.openStream(), options.signal, 30_000);
+    // NativeFramedStream.open performs the one stream-level hello. A second
+    // hello here would be interpreted as application data by the peer.
     const stream = await NativeFramedStream.open(connection, DEFAULT_ALPN);
-    try {
-      await negotiateStreamHello(
-        {
-          read: () => stream.read(options),
-          write: (data) => stream.write(data, options),
-        },
-        { alpn: DEFAULT_ALPN },
-      );
-      this.streams.add(stream);
-      return stream;
-    } catch (error) {
-      await stream.close().catch(() => undefined);
-      throw new ReactNativeTransportError('ALPN_MISMATCH', 'Peer stream hello was rejected', {
-        cause: error,
-      });
-    }
+    this.streams.add(stream);
+    return stream;
   }
   async close(reason?: string): Promise<void> {
     if (this.closed) return;

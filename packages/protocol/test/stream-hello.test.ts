@@ -54,3 +54,17 @@ test('stream hello validates its magic, version and bounded domain', () => {
     /length|truncated/,
   );
 });
+
+test('stream hello timeout does not wait forever on a backpressured write', async () => {
+  await assert.rejects(
+    () =>
+      negotiateStreamHello(
+        {
+          write: () => new Promise<void>(() => undefined),
+          read: () => new Promise<Uint8Array | null>(() => undefined),
+        },
+        { alpn: 'sovereign-apps/1', timeoutMs: 10 },
+      ),
+    /timed out/,
+  );
+});
