@@ -6,8 +6,8 @@
   "description": "Monorepo template for sovereign P2P apps — Electron + React Native + Landing, powered by Iroh QUIC",
   "status": "pre-alpha",
   "frequency": "weekly",
-  "lastAction": "2026-08-06T11:30:00Z",
-  "lastActionDescription": "Audited the initial template and prepared a public, explicitly pre-alpha baseline",
+  "lastAction": "2026-08-06T11:15:00Z",
+  "lastActionDescription": "Published the audited, explicitly pre-alpha baseline to public GitHub main",
   "nextNeeds": [
     "SA-001 reproducible workspace and dependency installation",
     "SA-002 protocol contract and framing correctness",
