@@ -84,6 +84,7 @@ export function writeEvidence({
   durationSeconds = null,
   notes = '',
   logs = [],
+  physicalAttestationSha256 = null,
 }) {
   if (!/^[a-z0-9-]{3,80}$/.test(platformId) || !/^[a-z0-9-]{3,80}$/.test(caseId))
     throw new Error('platformId and caseId must be lowercase identifiers.');
@@ -113,6 +114,7 @@ export function writeEvidence({
     notes: sanitizeText(notes),
     sanitized: true,
     logs: safeLogs,
+    physicalAttestationSha256,
     packages: packageVersions(root),
     toolchain: toolchainVersions(),
   };

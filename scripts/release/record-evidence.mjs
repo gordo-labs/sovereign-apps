@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { writeEvidence } from './evidence-lib.mjs';
+import { hashFile, writeEvidence } from './evidence-lib.mjs';
 
 function args(argv) {
   const out = {};
@@ -23,6 +23,15 @@ const logs = options.log
       .map((path) => resolve(path))
   : [];
 for (const path of logs) if (!existsSync(path)) throw new Error(`Log does not exist: ${path}`);
+const physical = /-physical$/.test(String(options.platform));
+let physicalAttestationSha256 = null;
+if (physical && options.result === 'pass') {
+  if (!options.attestation)
+    throw new Error('A sanitized --attestation file is required for physical pass evidence');
+  const attestation = resolve(String(options.attestation));
+  if (!existsSync(attestation)) throw new Error(`Attestation does not exist: ${attestation}`);
+  physicalAttestationSha256 = hashFile(attestation);
+}
 const { path } = writeEvidence({
   root,
   evidenceDir: resolve(options['evidence-dir'] ?? 'artifacts/support-evidence'),
@@ -34,5 +43,6 @@ const { path } = writeEvidence({
   durationSeconds: options.duration,
   notes: options.notes,
   logs,
+  physicalAttestationSha256,
 });
 console.log(`Support evidence written: ${path}`);

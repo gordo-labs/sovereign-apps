@@ -66,6 +66,8 @@ for (const item of required) {
   }
   if (latest.result !== 'pass')
     failed.push({ ...item, result: latest.result, evidenceId: latest.evidenceId });
+  if (platform.physical && latest.result === 'pass' && !latest.physicalAttestationSha256)
+    failed.push({ ...item, result: 'missing-attestation', evidenceId: latest.evidenceId });
 }
 const unsigned = !process.env.SOVEREIGN_EVIDENCE_PRIVATE_KEY;
 const issues = [
@@ -103,6 +105,7 @@ const manifest = {
       packages,
       toolchain,
       logs,
+      physicalAttestationSha256,
     }) => ({
       evidenceId,
       platformId,
@@ -115,6 +118,7 @@ const manifest = {
       packages,
       toolchain,
       logs,
+      physicalAttestationSha256,
     }),
   ),
   signature: { algorithm: 'ed25519', signed: false, publicKeySha256: null, value: null },

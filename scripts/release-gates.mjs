@@ -46,4 +46,5 @@ run('pnpm', ['build'], 'workspace build');
 for (const dir of releaseDirs)
   run('npm', ['pack', '--dry-run', '--json'], `package dry-run (${dir})`, dir);
 run('pnpm', ['release:install-test'], 'external package install test');
+run('pnpm', ['release:evidence-test'], 'physical evidence boundary test');
 console.log(`release gates passed: ${packageJsons.length} workspace manifests checked`);

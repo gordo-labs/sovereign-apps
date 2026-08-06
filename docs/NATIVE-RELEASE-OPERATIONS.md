@@ -48,6 +48,7 @@ phone, on a disposable test account. Record a case with:
 node scripts/release/record-evidence.mjs \
   --platform ios-physical --case qr-scan-first-pair --result pass \
   --device-class "iPhone class" --os-class "iOS major.minor class" \
+  --attestation path/to/sanitized-device-attestation.json \
   --notes "Observed QR pairing and authenticated session"
 ```
 
@@ -77,7 +78,9 @@ desktop build case for every desktop row:
 
 For each case, attach a sanitized log hash with `--log path/to/sanitized.log`.
 The evidence writer rejects sensitive field names and stores only the log
-SHA-256. Evidence must be generated within the manifest freshness window
+SHA-256. Physical `pass` evidence is rejected unless a sanitized attestation
+file is supplied; the manifest also marks legacy/synthetic pass records without
+that hash red. Evidence must be generated within the manifest freshness window
 (72 hours for stable, 168 hours for CI by default).
 
 ## Build and manifest commands

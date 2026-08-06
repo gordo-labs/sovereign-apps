@@ -29,6 +29,7 @@
     "durationSeconds": { "type": ["number", "null"], "minimum": 0 },
     "notes": { "type": "string", "maxLength": 2000 },
     "sanitized": { "const": true },
+    "physicalAttestationSha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
     "logs": {
       "type": "array",
       "items": {
