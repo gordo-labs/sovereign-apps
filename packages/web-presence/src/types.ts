@@ -33,7 +33,12 @@ export type PresenceStore<T = unknown> = {
 };
 
 export type SignalingStore<T = unknown> = {
-  list(identity: string, sessionId: string, sinceIssuedAtMs?: number): Promise<T[]> | T[];
+  list(
+    identity: string,
+    sessionId: string,
+    sinceIssuedAtMs?: number,
+    nowMs?: number,
+  ): Promise<T[]> | T[];
   append(
     identity: string,
     sessionId: string,

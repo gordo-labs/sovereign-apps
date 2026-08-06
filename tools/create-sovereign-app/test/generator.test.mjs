@@ -52,6 +52,10 @@ test('rejects unsafe names, paths and dependency/platform errors', () => {
     () => validateConfig({ name: 'bt', platforms: 'android', modules: 'bluetoothTransport' }),
     /SA-015 no-go/,
   );
+  assert.throws(
+    () => validateConfig({ name: 'web-ble', platforms: 'web', modules: 'bleBootstrap' }),
+    /module bleBootstrap has no adapter/,
+  );
 });
 
 test('generates, checks, and safely repeats into a temporary directory', async () => {

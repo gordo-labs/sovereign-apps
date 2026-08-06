@@ -111,6 +111,18 @@ export class WebPresenceCore<TPresence = unknown, TSignal = unknown> {
     this.validate(verified, true, request, verified.identity);
     const key = `${verified.identity}:${verified.sessionId}`;
     if (!this.allow('signal', key, request)) this.reject('rate_limited');
+    // Enforce the session cap at the core boundary as well as in production
+    // stores. A store may still enforce this atomically when multiple writers
+    // race; this check prevents unbounded growth for every adapter.
+    await this.options.signaling!.deleteExpired(now, this.limits.maxDeletesPerRequest);
+    const existing = await this.options.signaling!.list(
+      verified.identity,
+      verified.sessionId,
+      undefined,
+      now,
+    );
+    if (existing.length >= this.limits.maxSignalingPerSession)
+      this.reject('signaling_session_full');
     const accepted = await this.options.signaling!.append(
       verified.identity,
       verified.sessionId,
@@ -128,8 +140,9 @@ export class WebPresenceCore<TPresence = unknown, TSignal = unknown> {
   ): Promise<TSignal[]> {
     if (!this.options.signaling) this.reject('signaling_unavailable');
     if (!this.allow('signal-get', `${identity}:${sessionId}`, request)) this.reject('rate_limited');
-    await this.options.signaling!.deleteExpired(this.now(), this.limits.maxDeletesPerRequest);
-    return this.options.signaling!.list(identity, sessionId, sinceIssuedAtMs);
+    const now = this.now();
+    await this.options.signaling!.deleteExpired(now, this.limits.maxDeletesPerRequest);
+    return this.options.signaling!.list(identity, sessionId, sinceIssuedAtMs, now);
   }
   private allow(kind: string, identity: string, request?: Request) {
     const key = `${kind}:${identity}:${this.key(request)}`;

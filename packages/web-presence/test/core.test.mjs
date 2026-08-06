@@ -106,6 +106,48 @@ test('atomic store accepts only one concurrent record for the same issued timest
   );
 });
 
+test('enforces signaling session cap and uses the injected clock for expiry', async () => {
+  clock.value = 1_700_000_000_000;
+  const signaling = new (await import('../dist/memory.js')).MemorySignalingStore();
+  const signalingCodec = {
+    ...codec,
+    verifySignaling(value, { nowMs }) {
+      return {
+        identity: value.identity,
+        sessionId: value.sessionId,
+        issuedAtMs: nowMs,
+        expiresAtMs: nowMs + 60_000,
+      };
+    },
+  };
+  const core = new WebPresenceCore({
+    presence: new MemoryPresenceStore(),
+    signaling,
+    codec: signalingCodec,
+    rateLimiter: new MemoryRateLimiter(),
+    clock,
+    limits: { maxSignalingPerSession: 1, signalingPerSessionPerWindow: 100 },
+  });
+  await core.putSignaling(
+    { identity: 'peer-a', sessionId: 'session-a' },
+    undefined,
+    'peer-a',
+    'session-a',
+  );
+  await assert.rejects(
+    () =>
+      core.putSignaling(
+        { identity: 'peer-a', sessionId: 'session-a' },
+        undefined,
+        'peer-a',
+        'session-a',
+      ),
+    { reason: 'signaling_session_full' },
+  );
+  clock.value += 120_000;
+  assert.deepEqual(await core.getSignaling('peer-a', 'session-a'), []);
+});
+
 test(
   'rate limits and keeps anonymous presence non-authoritative',
   { concurrency: false },
@@ -162,4 +204,13 @@ test('Next route factories preserve arbitrary mount path and App Router contract
     { params: Promise.resolve({ identity: 'peer-b' }) },
   );
   assert.equal(mismatch.status, 400);
+  const invalidSince = await routes.signaling(
+    new Request('https://presence.example/api/presence/peer-a/session-a?since=not-a-date'),
+    { params: Promise.resolve({ identity: 'peer-a', sessionId: 'session-a' }) },
+  );
+  assert.equal(invalidSince.status, 400);
+  const invalidIdentity = await routes.presence(new Request('https://presence.example'), {
+    params: Promise.resolve({ identity: 'x'.repeat(513) }),
+  });
+  assert.equal(invalidIdentity.status, 400);
 });

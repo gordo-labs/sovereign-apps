@@ -23,8 +23,15 @@ const error = (reason: unknown) => {
 const param = (ctx: RouteContext, name: string) =>
   Promise.resolve(ctx.params).then((p) => {
     const value = p[name];
-    return Array.isArray(value) ? (value[0] ?? '') : (value ?? '');
+    const result = Array.isArray(value) ? (value[0] ?? '') : (value ?? '');
+    if (!result || result.length > 512 || /[\u0000-\u001f\u007f/]/u.test(result))
+      throw new PresenceRouteError(`invalid_${name}`);
+    return result;
   });
+
+class PresenceRouteError extends Error {
+  readonly status = 400;
+}
 
 /** Factories are compatible with Next App Router route exports and do not own route files. */
 export function createBootstrapRoute(core: WebPresenceCore, apiBase: string): NextHandler {
@@ -56,12 +63,10 @@ export function createSignalingRoute(core: WebPresenceCore): NextHandler {
       const session = await param(context, 'sessionId');
       if (request.method === 'GET') {
         const since = new URL(request.url).searchParams.get('since');
-        const records = await core.getSignaling(
-          identity,
-          session,
-          since ? Date.parse(since) : undefined,
-          request,
-        );
+        const sinceIssuedAtMs = since === null || since === '' ? undefined : Date.parse(since);
+        if (sinceIssuedAtMs !== undefined && !Number.isFinite(sinceIssuedAtMs))
+          throw new PresenceRouteError('invalid_since');
+        const records = await core.getSignaling(identity, session, sinceIssuedAtMs, request);
         return json({ records });
       }
       if (request.method !== 'PUT' && request.method !== 'POST')

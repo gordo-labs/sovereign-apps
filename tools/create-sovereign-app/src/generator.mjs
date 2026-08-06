@@ -89,7 +89,7 @@ export function validateConfig(input) {
     );
     if (missing.length) errors.push(`module ${id} requires ${missing.join(', ')}`);
     const supported = config.platforms.some((platform) => spec.platforms.includes(platform));
-    if (!supported && !spec.optional)
+    if (!supported)
       errors.push(
         `module ${id} has no adapter for selected platforms (${config.platforms.join(', ')})`,
       );

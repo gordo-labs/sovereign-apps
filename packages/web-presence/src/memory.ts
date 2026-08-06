@@ -34,9 +34,9 @@ export class MemorySignalingStore<T> implements SignalingStore<T> {
     string,
     Array<{ record: T; issuedAtMs: number; expiresAtMs: number }>
   >();
-  list(identity: string, sessionId: string, sinceIssuedAtMs = -Infinity): T[] {
+  list(identity: string, sessionId: string, sinceIssuedAtMs = -Infinity, nowMs = Date.now()): T[] {
     return (this.records.get(`${identity}:${sessionId}`) ?? [])
-      .filter((x) => x.expiresAtMs > Date.now() && x.issuedAtMs > sinceIssuedAtMs)
+      .filter((x) => x.expiresAtMs > nowMs && x.issuedAtMs > sinceIssuedAtMs)
       .map((x) => x.record);
   }
   append(
