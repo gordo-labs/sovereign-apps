@@ -34,12 +34,7 @@ import {
 } from '@sovereign-apps/protocol';
 
 export type PairingState =
-  | 'scanning'
-  | 'qr_scanned'
-  | 'fingerprint_verified'
-  | 'handshake'
-  | 'paired'
-  | 'error';
+  'scanning' | 'qr_scanned' | 'fingerprint_verified' | 'handshake' | 'paired' | 'error';
 
 export interface PairingEvent {
   type: PairingState;
@@ -85,12 +80,17 @@ export class MobilePairingClient {
    * Handle a scanned QR payload.
    * Sets state to 'qr_scanned', emits the event.
    */
-  handleQrScan(qrData: string, options: { allowManual?: boolean } = {}): {
-    hubId: string;
-    nodeId: string;
-    fingerprint: string;
-    bootstrap: string | null;
-  } | { error: string } {
+  handleQrScan(
+    qrData: string,
+    options: { allowManual?: boolean } = {},
+  ):
+    | {
+        hubId: string;
+        nodeId: string;
+        fingerprint: string;
+        bootstrap: string | null;
+      }
+    | { error: string } {
     try {
       const secure = parsePairingInput(qrData, options);
       const parsed = {
@@ -122,7 +122,9 @@ export class MobilePairingClient {
   }
 
   /** Diagnostic-only fallback; production UI must use camera/deep-link input. */
-  handleManualDiagnosticInput(qrData: string) { return this.handleQrScan(qrData, { allowManual: true }); }
+  handleManualDiagnosticInput(qrData: string) {
+    return this.handleQrScan(qrData, { allowManual: true });
+  }
 
   /**
    * User has verified the fingerprint matches the desktop screen.

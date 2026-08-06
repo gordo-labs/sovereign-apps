@@ -46,7 +46,11 @@ export async function bridgeDiagnostics(bridge: BridgeLike): Promise<{
     bridge.nodeId(),
     bridge.isRunning(),
   ]);
-  return { packageVersion: String(packageVersion), nodeId: String(nodeId), running: Boolean(running) };
+  return {
+    packageVersion: String(packageVersion),
+    nodeId: String(nodeId),
+    running: Boolean(running),
+  };
 }
 
 /** Compatibility alias for consumers migrating from the pre-0.2 skeleton. */

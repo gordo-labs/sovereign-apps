@@ -4,7 +4,9 @@ import { stdin as input, stdout as output } from 'node:process';
 import { generate, render } from './generator.mjs';
 
 function help() {
-  console.log(`create-sovereign-app\n\nUsage: create-sovereign-app [options]\n\nOptions:\n  --name NAME              lowercase project name\n  --namespace NAME         protocol namespace (defaults to name)\n  --package-scope @scope   package scope\n  --platforms LIST         electron,android,ios,web\n  --modules LIST           qr,mdns,webPresence,nextExample,exampleCodec,electron,reactNative\n  --dir PATH               output directory (basename must equal name)\n  --dry-run                print files without writing\n  --print-config           print the resolved manifest\n  --yes                    skip interactive confirmation\n  --help                   show this help`);
+  console.log(
+    `create-sovereign-app\n\nUsage: create-sovereign-app [options]\n\nOptions:\n  --name NAME              lowercase project name\n  --namespace NAME         protocol namespace (defaults to name)\n  --package-scope @scope   package scope\n  --platforms LIST         electron,android,ios,web\n  --modules LIST           qr,mdns,webPresence,nextExample,exampleCodec,electron,reactNative\n  --dir PATH               output directory (basename must equal name)\n  --dry-run                print files without writing\n  --print-config           print the resolved manifest\n  --yes                    skip interactive confirmation\n  --help                   show this help`,
+  );
 }
 
 function args(argv) {
@@ -25,27 +27,42 @@ async function interactive(config) {
   const rl = readline.createInterface({ input, output });
   try {
     config.name ||= await rl.question('Project name: ');
-    config.namespace ||= await rl.question(`Namespace [${config.name}]: `) || config.name;
-    config.platforms ||= await rl.question('Platforms [electron,android]: ') || 'electron,android';
-    config.modules ||= await rl.question('Modules [electron,reactNative,qr]: ') || 'electron,reactNative,qr';
+    config.namespace ||= (await rl.question(`Namespace [${config.name}]: `)) || config.name;
+    config.platforms ||=
+      (await rl.question('Platforms [electron,android]: ')) || 'electron,android';
+    config.modules ||=
+      (await rl.question('Modules [electron,reactNative,qr]: ')) || 'electron,reactNative,qr';
     config.output ||= config.name;
-  } finally { rl.close(); }
+  } finally {
+    rl.close();
+  }
   return config;
 }
 
 try {
   const options = args(process.argv.slice(2));
-  if (options.help) { help(); process.exit(0); }
+  if (options.help) {
+    help();
+    process.exit(0);
+  }
   const config = options.name ? options : await interactive(options);
   const result = render(config);
   if (options.printConfig) console.log(JSON.stringify(result.manifest, null, 2));
   if (options.dryRun) {
-    console.log(JSON.stringify({ root: result.config.output, files: [...result.files.keys()], manifest: result.manifest }, null, 2));
+    console.log(
+      JSON.stringify(
+        { root: result.config.output, files: [...result.files.keys()], manifest: result.manifest },
+        null,
+        2,
+      ),
+    );
     process.exit(0);
   }
   if (!options.yes && !options.name) {
     const rl = readline.createInterface({ input, output });
-    const answer = await rl.question(`Generate ${result.config.name} with ${result.config.modules.length} modules? [y/N] `);
+    const answer = await rl.question(
+      `Generate ${result.config.name} with ${result.config.modules.length} modules? [y/N] `,
+    );
     rl.close();
     if (answer.toLowerCase() !== 'y') process.exit(1);
   }

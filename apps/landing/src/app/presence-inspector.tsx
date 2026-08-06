@@ -14,7 +14,9 @@ type SafeRecord = {
 export default function PresenceInspector() {
   const [identity, setIdentity] = useState('');
   const [record, setRecord] = useState<SafeRecord | null>(null);
-  const [state, setState] = useState<'empty' | 'loading' | 'ready' | 'not-found' | 'error'>('empty');
+  const [state, setState] = useState<'empty' | 'loading' | 'ready' | 'not-found' | 'error'>(
+    'empty',
+  );
 
   async function resolve(event: React.FormEvent) {
     event.preventDefault();
@@ -67,18 +69,23 @@ export default function PresenceInspector() {
       </p>
       {record && (
         <dl>
-          <dt>Hub identity</dt><dd>{record.hubId}</dd>
-          <dt>Transport peer</dt><dd>{record.transportPeerId}</dd>
-          <dt>Transport</dt><dd>{record.transportKind ?? 'not declared'}</dd>
-          <dt>Issued</dt><dd>{record.issuedAt}</dd>
-          <dt>Expires</dt><dd>{record.expiresAt}</dd>
-          <dt>Candidate kinds</dt><dd>{record.candidateKinds.join(', ') || 'none'}</dd>
+          <dt>Hub identity</dt>
+          <dd>{record.hubId}</dd>
+          <dt>Transport peer</dt>
+          <dd>{record.transportPeerId}</dd>
+          <dt>Transport</dt>
+          <dd>{record.transportKind ?? 'not declared'}</dd>
+          <dt>Issued</dt>
+          <dd>{record.issuedAt}</dd>
+          <dt>Expires</dt>
+          <dd>{record.expiresAt}</dd>
+          <dt>Candidate kinds</dt>
+          <dd>{record.candidateKinds.join(', ') || 'none'}</dd>
         </dl>
       )}
       <p>
-        This diagnostic view intentionally omits signatures, addresses, and
-        payloads. A valid record is only a hint; the paired client must verify
-        it and establish a connection independently.
+        This diagnostic view intentionally omits signatures, addresses, and payloads. A valid record
+        is only a hint; the paired client must verify it and establish a connection independently.
       </p>
     </section>
   );

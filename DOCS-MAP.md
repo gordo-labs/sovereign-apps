@@ -9,12 +9,14 @@
 | Ordered tasks | [working/BACKLOG.md](./working/BACKLOG.md) |
 | Agent prompts | [working/prompts/README.md](./working/prompts/README.md) |
 | Session trace | [working/history/2026/2026-08.md](./working/history/2026/2026-08.md) |
+| Native release operations | [docs/NATIVE-RELEASE-OPERATIONS.md](./docs/NATIVE-RELEASE-OPERATIONS.md) + [release/support-matrix.json](./release/support-matrix.json) |
 
 Source ownership:
 
 - shared contracts: `packages/protocol/`
 - desktop adapter/reference app: `packages/electron-app/`
 - mobile adapter/reference app: `packages/react-native-app/`
-- current web prototype to replace: `apps/landing/`
-- target installable web presence: framework-neutral package + Next.js adapter
-  and minimal example, as specified by SA-013 then SA-010
+- web-presence example host: `apps/landing/` (minimal Next.js integration,
+  intentionally not a marketing landing)
+- installable web presence: `packages/web-presence/` framework-neutral package
+  plus Next.js adapter and example routes

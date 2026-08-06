@@ -11,8 +11,7 @@ import {
 export type EndpointState = 'starting' | 'ready' | 'unavailable' | 'error' | 'closed';
 
 export type IrohCandidate =
-  | { kind: 'direct'; address: string }
-  | { kind: 'relay'; address: string };
+  { kind: 'direct'; address: string } | { kind: 'relay'; address: string };
 
 export interface IrohDuplexConnection {
   readonly peerId: string;
@@ -38,7 +37,10 @@ export interface IrohNode {
   readonly lastError?: string;
   readonly candidates: readonly IrohCandidate[];
   serveSessions(handler: (connection: IrohDuplexConnection) => void | Promise<void>): Promise<void>;
-  dial(nodeId: string, options?: IrohDialOptions & { timeoutMs?: number }): Promise<IrohDialSession>;
+  dial(
+    nodeId: string,
+    options?: IrohDialOptions & { timeoutMs?: number },
+  ): Promise<IrohDialSession>;
   refreshAddressInfo(): Promise<readonly IrohCandidate[]>;
   close(): Promise<void>;
 }
@@ -50,7 +52,10 @@ export type CreateIrohNodeOptions = {
   maxSessions?: number;
   maxFrameBytes?: number;
   dialTimeoutMs?: number;
-  nativeFactory?: (options: { key: Uint8Array; relay?: { mode: string } }) => Promise<NativeIrohNode>;
+  nativeFactory?: (options: {
+    key: Uint8Array;
+    relay?: { mode: string };
+  }) => Promise<NativeIrohNode>;
 };
 
 const MAX_SESSIONS = 50;
@@ -115,13 +120,20 @@ export class ElectronIrohNode implements IrohNode {
     this.ticket = await this.native.ticket();
     const direct = (info.directAddresses ?? []).filter((address) => isDirectAddress(address));
     const candidates: IrohCandidate[] = [];
-    if (direct.length > 0) candidates.push({ kind: 'direct', address: JSON.stringify({ id: this.nodeId, addrs: direct }) });
-    if (info.relayUrl && isRelayUrl(info.relayUrl)) candidates.push({ kind: 'relay', address: info.relayUrl });
+    if (direct.length > 0)
+      candidates.push({
+        kind: 'direct',
+        address: JSON.stringify({ id: this.nodeId, addrs: direct }),
+      });
+    if (info.relayUrl && isRelayUrl(info.relayUrl))
+      candidates.push({ kind: 'relay', address: info.relayUrl });
     this.candidatesValue = candidates;
     return candidates;
   }
 
-  async serveSessions(handler: (connection: IrohDuplexConnection) => void | Promise<void>): Promise<void> {
+  async serveSessions(
+    handler: (connection: IrohDuplexConnection) => void | Promise<void>,
+  ): Promise<void> {
     if (this.accepting) return this.accepting;
     this.ensureOpen();
     this.accepting = (async () => {
@@ -132,7 +144,11 @@ export class ElectronIrohNode implements IrohNode {
             session.close({ closeCode: 429, reason: 'session limit reached' });
             continue;
           }
-          const connection = await FramedIrohConnection.open(session, this.maxFrameBytes, this.alpn);
+          const connection = await FramedIrohConnection.open(
+            session,
+            this.maxFrameBytes,
+            this.alpn,
+          );
           this.sessions.add(connection);
           connection.onClose(() => this.sessions.delete(connection));
           try {
@@ -152,7 +168,10 @@ export class ElectronIrohNode implements IrohNode {
     return this.accepting;
   }
 
-  async dial(nodeId: string, options: IrohDialOptions & { timeoutMs?: number } = {}): Promise<IrohDialSession> {
+  async dial(
+    nodeId: string,
+    options: IrohDialOptions & { timeoutMs?: number } = {},
+  ): Promise<IrohDialSession> {
     this.ensureOpen();
     const timeoutMs = options.timeoutMs ?? this.dialTimeoutMs;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -190,13 +209,16 @@ export class ElectronIrohNode implements IrohNode {
     this.closed = true;
     this.state = 'closed';
     this.abortController.abort();
-    await Promise.all([...this.sessions].map((connection) => connection.close().catch(() => undefined)));
+    await Promise.all(
+      [...this.sessions].map((connection) => connection.close().catch(() => undefined)),
+    );
     await this.native.close({ force: true });
     this.sessions.clear();
   }
 
   private ensureOpen(): void {
-    if (this.closed || this.state === 'closed') throw new IrohRuntimeError('closed', 'Iroh endpoint is closed');
+    if (this.closed || this.state === 'closed')
+      throw new IrohRuntimeError('closed', 'Iroh endpoint is closed');
   }
 }
 
@@ -211,19 +233,35 @@ class FramedIrohConnection implements IrohDuplexConnection {
   private writeChain = Promise.resolve();
   private closed = false;
 
-  private constructor(private readonly session: NativeSession, maxFrameBytes: number, _alpn: string, stream: { readable: ReadableStream<Uint8Array>; writable: WritableStream<Uint8Array> }) {
+  private constructor(
+    private readonly session: NativeSession,
+    maxFrameBytes: number,
+    _alpn: string,
+    stream: { readable: ReadableStream<Uint8Array>; writable: WritableStream<Uint8Array> },
+  ) {
     this.peerId = session.remoteId.toString();
     this.decoder = new FrameDecoder({ maxFrameBytes });
     this.maxFrameBytes = maxFrameBytes;
     this.reader = stream.readable.getReader();
     this.writer = stream.writable.getWriter();
     void this.readLoop();
-    void session.closed.then(() => this.markClosed()).catch((error) => this.markClosed(asError(error)));
+    void session.closed
+      .then(() => this.markClosed())
+      .catch((error) => this.markClosed(asError(error)));
   }
 
-  static async open(session: NativeSession, maxFrameBytes: number, alpn: string): Promise<FramedIrohConnection> {
+  static async open(
+    session: NativeSession,
+    maxFrameBytes: number,
+    alpn: string,
+  ): Promise<FramedIrohConnection> {
     await session.ready;
-    return new FramedIrohConnection(session, maxFrameBytes, alpn, await session.createBidirectionalStream());
+    return new FramedIrohConnection(
+      session,
+      maxFrameBytes,
+      alpn,
+      await session.createBidirectionalStream(),
+    );
   }
 
   send(data: Uint8Array): Promise<void> {
@@ -278,7 +316,10 @@ class FramedIrohConnection implements IrohDuplexConnection {
 }
 
 export class IrohRuntimeError extends Error {
-  constructor(readonly state: Exclude<EndpointState, 'starting' | 'ready'>, message: string) {
+  constructor(
+    readonly state: Exclude<EndpointState, 'starting' | 'ready'>,
+    message: string,
+  ) {
     super(message);
     this.name = 'IrohRuntimeError';
   }

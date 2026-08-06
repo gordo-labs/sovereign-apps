@@ -3,7 +3,18 @@
   "$id": "https://sovereign-apps.dev/schemas/support-evidence.schema.json",
   "title": "Sovereign Apps support evidence",
   "type": "object",
-  "required": ["schemaVersion", "evidenceId", "platformId", "caseId", "commit", "generatedAt", "result", "sanitized", "packages", "toolchain"],
+  "required": [
+    "schemaVersion",
+    "evidenceId",
+    "platformId",
+    "caseId",
+    "commit",
+    "generatedAt",
+    "result",
+    "sanitized",
+    "packages",
+    "toolchain"
+  ],
   "additionalProperties": false,
   "properties": {
     "schemaVersion": { "const": "1.0" },
@@ -31,6 +42,9 @@
       }
     },
     "packages": { "type": "object", "additionalProperties": { "type": "string", "maxLength": 80 } },
-    "toolchain": { "type": "object", "additionalProperties": { "type": ["string", "null"], "maxLength": 160 } }
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": { "type": ["string", "null"], "maxLength": 160 }
+    }
   }
 }

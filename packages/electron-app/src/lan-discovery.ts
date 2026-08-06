@@ -1,15 +1,26 @@
 import { Bonjour, type Service } from 'bonjour-service';
 import type { ModuleContext, SovereignModule } from '@sovereign-apps/module-kernel';
 import { defineManifest } from '@sovereign-apps/module-kernel';
-import { encodeLanTxt, LAN_SERVICE_DOMAIN, LAN_SERVICE_TYPE, type LanDiscoveryRecord } from '@sovereign-apps/protocol';
+import {
+  encodeLanTxt,
+  LAN_SERVICE_DOMAIN,
+  LAN_SERVICE_TYPE,
+  type LanDiscoveryRecord,
+} from '@sovereign-apps/protocol';
 
-export type LanAdvertisementSource = () => Omit<LanDiscoveryRecord, 'version'> & { version?: 1; servicePort?: number };
+export type LanAdvertisementSource = () => Omit<LanDiscoveryRecord, 'version'> & {
+  version?: 1;
+  servicePort?: number;
+};
 
 /** Electron Bonjour/DNS-SD advertiser. TXT data is deliberately bounded and non-secret. */
 export class ElectronLanAdvertiser implements SovereignModule {
   readonly manifest = defineManifest({
-    id: 'discovery.lan-mdns.electron', version: '1.0.0', kind: 'discovery' as const,
-    platforms: ['electron'] as const, optional: true,
+    id: 'discovery.lan-mdns.electron',
+    version: '1.0.0',
+    kind: 'discovery' as const,
+    platforms: ['electron'] as const,
+    optional: true,
     capabilities: ['dns-sd-advertise', 'lan-candidates'],
   });
   readonly availability = { available: true, platforms: ['electron'] as const };
@@ -18,7 +29,9 @@ export class ElectronLanAdvertiser implements SovereignModule {
   private service: Service | null = null;
   private readonly source: LanAdvertisementSource;
 
-  constructor(options: { source: LanAdvertisementSource }) { this.source = options.source; }
+  constructor(options: { source: LanAdvertisementSource }) {
+    this.source = options.source;
+  }
 
   async start(_context: ModuleContext): Promise<void> {
     if (this.state === 'ready') return;
@@ -44,7 +57,10 @@ export class ElectronLanAdvertiser implements SovereignModule {
   }
 
   async stop(): Promise<void> {
-    if (this.state === 'stopped' || this.state === 'idle') { this.state = 'stopped'; return; }
+    if (this.state === 'stopped' || this.state === 'idle') {
+      this.state = 'stopped';
+      return;
+    }
     this.state = 'stopping';
     this.service?.stop();
     this.service = null;
@@ -60,6 +76,10 @@ export class ElectronLanAdvertiser implements SovereignModule {
     await this.start({ signal: new AbortController().signal, platform: 'electron', now: Date.now });
   }
 
-  get running(): boolean { return this.service !== null; }
-  get serviceDomain(): string { return LAN_SERVICE_DOMAIN; }
+  get running(): boolean {
+    return this.service !== null;
+  }
+  get serviceDomain(): string {
+    return LAN_SERVICE_DOMAIN;
+  }
 }

@@ -35,13 +35,20 @@ export async function stopElectronRuntime(): Promise<void> {
 }
 
 if (process.versions.electron) {
-  app.whenReady().then(() => startElectronRuntime()).catch((error) => {
-    console.error('[sovereign-app] startup failed:', error);
-    app.quit();
+  app
+    .whenReady()
+    .then(() => startElectronRuntime())
+    .catch((error) => {
+      console.error('[sovereign-app] startup failed:', error);
+      app.quit();
+    });
+  app.on('activate', () => {
+    void startElectronRuntime();
   });
-  app.on('activate', () => { void startElectronRuntime(); });
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
   });
-  app.on('before-quit', () => { void stopElectronRuntime(); });
+  app.on('before-quit', () => {
+    void stopElectronRuntime();
+  });
 }

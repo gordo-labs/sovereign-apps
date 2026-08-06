@@ -2,7 +2,12 @@ import type { WebPresenceCore } from './core.js';
 
 export type RouteContext = { params: Promise<Record<string, string | string[] | undefined>> };
 export type NextHandler = (request: Request, context: RouteContext) => Promise<Response>;
-export type NextWebPresenceRoutes = { basePath: string; bootstrap: NextHandler; presence: NextHandler; signaling: NextHandler };
+export type NextWebPresenceRoutes = {
+  basePath: string;
+  bootstrap: NextHandler;
+  presence: NextHandler;
+  signaling: NextHandler;
+};
 const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 const error = (reason: unknown) => {
@@ -72,7 +77,16 @@ export function createSignalingRoute(core: WebPresenceCore): NextHandler {
 }
 
 /** Return route factories for a configurable mount point; applications own route files. */
-export function createNextWebPresenceRoutes(options: { core: WebPresenceCore; basePath: string; apiBase?: string }): NextWebPresenceRoutes {
+export function createNextWebPresenceRoutes(options: {
+  core: WebPresenceCore;
+  basePath: string;
+  apiBase?: string;
+}): NextWebPresenceRoutes {
   const basePath = `/${options.basePath.replace(/^\/+|\/+$/g, '')}`;
-  return { basePath, bootstrap: createBootstrapRoute(options.core, options.apiBase ?? basePath), presence: createPresenceRoute(options.core), signaling: createSignalingRoute(options.core) };
+  return {
+    basePath,
+    bootstrap: createBootstrapRoute(options.core, options.apiBase ?? basePath),
+    presence: createPresenceRoute(options.core),
+    signaling: createSignalingRoute(options.core),
+  };
 }

@@ -1,5 +1,16 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { chmodSync, closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  closeSync,
+  existsSync,
+  fsyncSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 
 export type IdentityKind = 'iroh-node' | 'app-ed25519';
@@ -11,7 +22,10 @@ export type PersistedIdentity = {
 };
 
 export class CorruptIdentityError extends Error {
-  constructor(readonly path: string, message = `Corrupt ${path}`) {
+  constructor(
+    readonly path: string,
+    message = `Corrupt ${path}`,
+  ) {
     super(message);
     this.name = 'CorruptIdentityError';
   }
@@ -88,11 +102,20 @@ function atomicPrivateWrite(path: string, bytes: Uint8Array): void {
 }
 
 function tightenPrivateFile(path: string): void {
-  try { chmodSync(path, 0o600); } catch { /* read-only test files may reject chmod */ }
+  try {
+    chmodSync(path, 0o600);
+  } catch {
+    /* read-only test files may reject chmod */
+  }
 }
 
 function fingerprint(bytes: Uint8Array): string {
-  return createHash('sha256').update(bytes).digest('hex').slice(0, 32).replace(/(.{4})/g, '$1:').replace(/:$/, '');
+  return createHash('sha256')
+    .update(bytes)
+    .digest('hex')
+    .slice(0, 32)
+    .replace(/(.{4})/g, '$1:')
+    .replace(/:$/, '');
 }
 
 export function removeIdentityForTest(path: string): void {

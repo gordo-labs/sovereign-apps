@@ -52,8 +52,10 @@ class InProcessPeer {
         }
       }
       if (envelope.type === 'request' && envelope.payload?.kind === 'ping') {
-        this.link.deliver(this === this.link.desktop ? this.link.mobile : this.link.desktop,
-          encodeEnvelope(response(envelope.correlationId, { kind: 'pong', from: this.name })));
+        this.link.deliver(
+          this === this.link.desktop ? this.link.mobile : this.link.desktop,
+          encodeEnvelope(response(envelope.correlationId, { kind: 'pong', from: this.name })),
+        );
       }
     }
   }
@@ -70,15 +72,21 @@ class InProcessPeer {
 
   sendEvent(payload) {
     if (!this.connected) throw new Error(`${this.name}: disconnected`);
-    this.link.deliver(this === this.link.desktop ? this.link.mobile : this.link.desktop,
-      encodeEnvelope(event(`${this.name}-${++this.sequence}`, payload)));
+    this.link.deliver(
+      this === this.link.desktop ? this.link.mobile : this.link.desktop,
+      encodeEnvelope(event(`${this.name}-${++this.sequence}`, payload)),
+    );
   }
 }
 
 class InProcessLink {
   constructor() {
     this.grants = new PairingGrantStore();
-    this.grant = this.grants.issue({ peerKey: 'mobile-public-key', nodeId: 'mobile-node', capabilities: ['app.read'] });
+    this.grant = this.grants.issue({
+      peerKey: 'mobile-public-key',
+      nodeId: 'mobile-node',
+      capabilities: ['app.read'],
+    });
     this.desktop = new InProcessPeer('desktop', this);
     this.mobile = new InProcessPeer('mobile', this);
   }
@@ -123,7 +131,10 @@ test('desktop/mobile contract covers pair, bidirectional messages, reconnect and
 test('contract rejects malformed and over-limit traffic before dispatch', () => {
   const link = new InProcessLink();
   assert.throws(() => decodeEnvelope(new TextEncoder().encode('{"type":')));
-  assert.throws(() => encodeEnvelope(createEnvelope('event', 'bounded', { data: 'x'.repeat(3_000_000) })), /Frame too large|Payload/);
+  assert.throws(
+    () => encodeEnvelope(createEnvelope('event', 'bounded', { data: 'x'.repeat(3_000_000) })),
+    /Frame too large|Payload/,
+  );
   const decoder = new FrameDecoder({ maxFrameBytes: 32 });
   const malformedLength = new Uint8Array([0, 0, 1, 0]);
   assert.throws(() => decoder.push(malformedLength), /Frame too large/);

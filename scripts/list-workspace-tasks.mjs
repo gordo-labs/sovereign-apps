@@ -11,7 +11,9 @@ for (const root of roots) {
     continue;
   }
 
-  for (const entry of entries.filter((item) => item.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
+  for (const entry of entries
+    .filter((item) => item.isDirectory())
+    .sort((a, b) => a.name.localeCompare(b.name))) {
     const packagePath = join(root, entry.name, 'package.json');
     try {
       const manifest = JSON.parse(await readFile(packagePath, 'utf8'));

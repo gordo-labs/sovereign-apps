@@ -2,8 +2,14 @@
   "name": "@sovereign-apps/route-policy",
   "version": "0.0.1",
   "description": "Deterministic local-first route selection and reconnect policy",
-  "repository": { "type": "git", "url": "https://github.com/gordo-labs/sovereign-apps.git", "directory": "packages/route-policy" },
-  "bugs": { "url": "https://github.com/gordo-labs/sovereign-apps/issues" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gordo-labs/sovereign-apps.git",
+    "directory": "packages/route-policy"
+  },
+  "bugs": {
+    "url": "https://github.com/gordo-labs/sovereign-apps/issues"
+  },
   "homepage": "https://github.com/gordo-labs/sovereign-apps#readme",
   "type": "module",
   "main": "dist/index.js",
@@ -14,11 +20,20 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "license": "MIT",
   "sideEffects": false,
-  "engines": { "node": ">=22.12 <23" },
-  "publishConfig": { "access": "public", "provenance": true },
+  "engines": {
+    "node": ">=22.12 <23"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",

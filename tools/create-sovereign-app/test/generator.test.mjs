@@ -5,7 +5,11 @@ import path from 'node:path';
 import test from 'node:test';
 import { generate, render, validateConfig } from '../src/generator.mjs';
 
-const base = { name: 'demo-app', platforms: 'android,electron', modules: 'electron,reactNative,qr' };
+const base = {
+  name: 'demo-app',
+  platforms: 'android,electron',
+  modules: 'electron,reactNative,qr',
+};
 
 test('renders deterministic minimal desktop/mobile variant', () => {
   const first = render(base);
@@ -17,7 +21,11 @@ test('renders deterministic minimal desktop/mobile variant', () => {
 });
 
 test('supports desktop-only and local-only variants without unselected modules', () => {
-  const desktop = render({ name: 'desktop-app', platforms: 'electron', modules: 'electron,exampleCodec' });
+  const desktop = render({
+    name: 'desktop-app',
+    platforms: 'electron',
+    modules: 'electron,exampleCodec',
+  });
   assert.ok(desktop.files.has('src/electron/README.md'));
   assert.equal(desktop.files.has('src/modules/qr.mjs'), false);
   const local = render({ name: 'local-app', platforms: 'web', modules: 'webPresence,nextExample' });
@@ -28,10 +36,22 @@ test('supports desktop-only and local-only variants without unselected modules',
 test('rejects unsafe names, paths and dependency/platform errors', () => {
   assert.throws(() => validateConfig({ ...base, name: '../escape' }), /lowercase kebab-case/);
   assert.throws(() => validateConfig({ ...base, name: 'demo-app', dir: '../escape' }), /traversal/);
-  assert.throws(() => validateConfig({ name: 'web-only', platforms: 'web', modules: 'nextExample' }), /requires module webPresence/);
-  assert.throws(() => validateConfig({ name: 'mobile', platforms: 'android', modules: 'qr,reactNative' }), /requires both/);
-  assert.throws(() => validateConfig({ name: 'bad', platforms: 'desktop', modules: 'electron' }), /unsupported platform/);
-  assert.throws(() => validateConfig({ name: 'bt', platforms: 'android', modules: 'bluetoothTransport' }), /SA-015 no-go/);
+  assert.throws(
+    () => validateConfig({ name: 'web-only', platforms: 'web', modules: 'nextExample' }),
+    /requires module webPresence/,
+  );
+  assert.throws(
+    () => validateConfig({ name: 'mobile', platforms: 'android', modules: 'qr,reactNative' }),
+    /requires both/,
+  );
+  assert.throws(
+    () => validateConfig({ name: 'bad', platforms: 'desktop', modules: 'electron' }),
+    /unsupported platform/,
+  );
+  assert.throws(
+    () => validateConfig({ name: 'bt', platforms: 'android', modules: 'bluetoothTransport' }),
+    /SA-015 no-go/,
+  );
 });
 
 test('generates, checks, and safely repeats into a temporary directory', async () => {

@@ -19,10 +19,23 @@ export async function createDiagnosticWindow(snapshot: DiagnosticSnapshot): Prom
     title: 'Sovereign Apps diagnostics',
     webPreferences: { nodeIntegration: false, contextIsolation: true },
   });
-  await window.loadURL(`data:text/html;base64,${Buffer.from(buildDiagnosticHtml(snapshot)).toString('base64')}`);
+  await window.loadURL(
+    `data:text/html;base64,${Buffer.from(buildDiagnosticHtml(snapshot)).toString('base64')}`,
+  );
   return window;
 }
 
-export function snapshotForNode(node: IrohNode, fingerprint: string, sessions = 0): DiagnosticSnapshot {
-  return { nodeId: node.nodeId, fingerprint, state: node.state, candidates: node.candidates, sessions, lastError: node.lastError };
+export function snapshotForNode(
+  node: IrohNode,
+  fingerprint: string,
+  sessions = 0,
+): DiagnosticSnapshot {
+  return {
+    nodeId: node.nodeId,
+    fingerprint,
+    state: node.state,
+    candidates: node.candidates,
+    sessions,
+    lastError: node.lastError,
+  };
 }

@@ -15,7 +15,10 @@ type Runtime = WebPresenceCore<PresenceRecord, unknown>;
 let configured: Runtime | undefined;
 
 function decodeBase64Url(value: string): Buffer {
-  return Buffer.from(value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - value.length % 4) % 4), 'base64');
+  return Buffer.from(
+    value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (value.length % 4)) % 4),
+    'base64',
+  );
 }
 
 function codec(): PresenceCodec<PresenceRecord> {
@@ -33,8 +36,17 @@ function codec(): PresenceCodec<PresenceRecord> {
       let valid = false;
       try {
         const rawKey = decodeBase64Url(publicKey);
-        const key = createPublicKey({ key: Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), rawKey]), format: 'der', type: 'spki' });
-        valid = verifySignature(null, Buffer.from(canonicalJson(unsigned)), key, decodeBase64Url(signature));
+        const key = createPublicKey({
+          key: Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), rawKey]),
+          format: 'der',
+          type: 'spki',
+        });
+        valid = verifySignature(
+          null,
+          Buffer.from(canonicalJson(unsigned)),
+          key,
+          decodeBase64Url(signature),
+        );
       } catch {
         valid = false;
       }

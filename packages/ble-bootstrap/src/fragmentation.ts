@@ -70,14 +70,20 @@ function encodeFragment(
   return wire;
 }
 
-export async function fragmentBootstrap(payload: Uint8Array, options: FragmentOptions = {}): Promise<readonly Fragment[]> {
+export async function fragmentBootstrap(
+  payload: Uint8Array,
+  options: FragmentOptions = {},
+): Promise<readonly Fragment[]> {
   if (!(payload instanceof Uint8Array)) throw new TypeError('payload must be Uint8Array');
-  if (payload.length > MAX_BOOTSTRAP_BYTES) throw new RangeError(`bootstrap exceeds ${MAX_BOOTSTRAP_BYTES} bytes`);
+  if (payload.length > MAX_BOOTSTRAP_BYTES)
+    throw new RangeError(`bootstrap exceeds ${MAX_BOOTSTRAP_BYTES} bytes`);
   const mtu = options.mtu ?? 185;
-  if (!Number.isInteger(mtu) || mtu < MIN_ATT_MTU) throw new RangeError(`mtu must be at least ${MIN_ATT_MTU}`);
+  if (!Number.isInteger(mtu) || mtu < MIN_ATT_MTU)
+    throw new RangeError(`mtu must be at least ${MIN_ATT_MTU}`);
   const chunkBytes = Math.min(512, mtu - 3);
   const totalFragments = Math.max(1, Math.ceil(payload.length / chunkBytes));
-  if (totalFragments > MAX_FRAGMENTS) throw new RangeError(`bootstrap exceeds ${MAX_FRAGMENTS} fragments`);
+  if (totalFragments > MAX_FRAGMENTS)
+    throw new RangeError(`bootstrap exceeds ${MAX_FRAGMENTS} fragments`);
   const transferId = options.transferId ? new Uint8Array(options.transferId) : randomTransferId();
   validateTransferId(transferId);
   const digest = await sha256(payload);
@@ -86,14 +92,25 @@ export async function fragmentBootstrap(payload: Uint8Array, options: FragmentOp
     const start = sequence * chunkBytes;
     const part = payload.slice(start, Math.min(payload.length, start + chunkBytes));
     const wire = encodeFragment(transferId, sequence, totalFragments, payload.length, digest, part);
-    fragments.push({ transferId: new Uint8Array(transferId), version: 1, sequence, totalFragments, totalBytes: payload.length, digest: new Uint8Array(digest), payload: part, wire });
+    fragments.push({
+      transferId: new Uint8Array(transferId),
+      version: 1,
+      sequence,
+      totalFragments,
+      totalBytes: payload.length,
+      digest: new Uint8Array(digest),
+      payload: part,
+      wire,
+    });
   }
   return fragments;
 }
 
 export function decodeFragment(wire: Uint8Array): Fragment {
-  if (!(wire instanceof Uint8Array) || wire.length < HEADER_BYTES) throw new Error('BLE fragment is truncated');
-  if (!MAGIC.every((value, index) => wire[index] === value)) throw new Error('BLE fragment magic mismatch');
+  if (!(wire instanceof Uint8Array) || wire.length < HEADER_BYTES)
+    throw new Error('BLE fragment is truncated');
+  if (!MAGIC.every((value, index) => wire[index] === value))
+    throw new Error('BLE fragment magic mismatch');
   if (wire[4] !== BLE_BOOTSTRAP_VERSION) throw new Error('Unsupported BLE bootstrap version');
   const view = new DataView(wire.buffer, wire.byteOffset, wire.byteLength);
   const transferId = wire.slice(6, 14);
@@ -102,22 +119,46 @@ export function decodeFragment(wire: Uint8Array): Fragment {
   const totalBytes = view.getUint32(18);
   const payloadBytes = view.getUint16(22);
   const digest = wire.slice(24, 56);
-  if (totalFragments < 1 || totalFragments > MAX_FRAGMENTS || sequence >= totalFragments) throw new Error('Invalid BLE fragment sequence');
-  if (totalBytes > MAX_BOOTSTRAP_BYTES || payloadBytes !== wire.length - HEADER_BYTES) throw new Error('Invalid BLE fragment size');
-  if (totalFragments === 1 && totalBytes !== payloadBytes) throw new Error('Invalid single-fragment size');
+  if (totalFragments < 1 || totalFragments > MAX_FRAGMENTS || sequence >= totalFragments)
+    throw new Error('Invalid BLE fragment sequence');
+  if (totalBytes > MAX_BOOTSTRAP_BYTES || payloadBytes !== wire.length - HEADER_BYTES)
+    throw new Error('Invalid BLE fragment size');
+  if (totalFragments === 1 && totalBytes !== payloadBytes)
+    throw new Error('Invalid single-fragment size');
   if (totalFragments > 1 && payloadBytes === 0) throw new Error('Empty non-terminal BLE fragment');
-  return { transferId, version: 1, sequence, totalFragments, totalBytes, digest, payload: wire.slice(HEADER_BYTES), wire: new Uint8Array(wire) };
+  return {
+    transferId,
+    version: 1,
+    sequence,
+    totalFragments,
+    totalBytes,
+    digest,
+    payload: wire.slice(HEADER_BYTES),
+    wire: new Uint8Array(wire),
+  };
 }
 
-export async function reassembleBootstrap(fragments: readonly (Fragment | Uint8Array)[]): Promise<Uint8Array> {
-  if (fragments.length === 0 || fragments.length > MAX_FRAGMENTS) throw new Error('No valid BLE fragments');
-  const decoded = fragments.map((fragment) => fragment instanceof Uint8Array ? decodeFragment(fragment) : fragment);
+export async function reassembleBootstrap(
+  fragments: readonly (Fragment | Uint8Array)[],
+): Promise<Uint8Array> {
+  if (fragments.length === 0 || fragments.length > MAX_FRAGMENTS)
+    throw new Error('No valid BLE fragments');
+  const decoded = fragments.map((fragment) =>
+    fragment instanceof Uint8Array ? decodeFragment(fragment) : fragment,
+  );
   const first = decoded[0];
   const bySequence = new Map<number, Fragment>();
   for (const fragment of decoded) {
-    if (!equalBytes(fragment.transferId, first.transferId) || fragment.totalFragments !== first.totalFragments || fragment.totalBytes !== first.totalBytes || !equalBytes(fragment.digest, first.digest)) throw new Error('BLE fragments belong to different transfers');
+    if (
+      !equalBytes(fragment.transferId, first.transferId) ||
+      fragment.totalFragments !== first.totalFragments ||
+      fragment.totalBytes !== first.totalBytes ||
+      !equalBytes(fragment.digest, first.digest)
+    )
+      throw new Error('BLE fragments belong to different transfers');
     const existing = bySequence.get(fragment.sequence);
-    if (existing && !equalBytes(existing.payload, fragment.payload)) throw new Error('Conflicting duplicate BLE fragment');
+    if (existing && !equalBytes(existing.payload, fragment.payload))
+      throw new Error('Conflicting duplicate BLE fragment');
     bySequence.set(fragment.sequence, fragment);
   }
   if (bySequence.size !== first.totalFragments) throw new Error('BLE transfer is incomplete');
@@ -129,7 +170,8 @@ export async function reassembleBootstrap(fragments: readonly (Fragment | Uint8A
     result.set(fragment.payload, offset);
     offset += fragment.payload.length;
   }
-  if (offset !== first.totalBytes || !equalBytes(await sha256(result), first.digest)) throw new Error('BLE bootstrap integrity check failed');
+  if (offset !== first.totalBytes || !equalBytes(await sha256(result), first.digest))
+    throw new Error('BLE bootstrap integrity check failed');
   return result;
 }
 
@@ -143,7 +185,8 @@ export class ReassemblySession {
   constructor(timeoutMs = DEFAULT_TIMEOUT_MS, now = () => Date.now()) {
     this.timeoutMs = timeoutMs;
     this.now = now;
-    if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) throw new RangeError('timeoutMs must be positive');
+    if (!Number.isFinite(timeoutMs) || timeoutMs <= 0)
+      throw new RangeError('timeoutMs must be positive');
     this.deadline = this.now() + timeoutMs;
   }
   push(fragment: Fragment | Uint8Array): void {
@@ -158,6 +201,11 @@ export class ReassemblySession {
     this.completed = true;
     return result;
   }
-  cancel(): void { this.cancelled = true; this.fragments.length = 0; }
-  get isCancelled(): boolean { return this.cancelled; }
+  cancel(): void {
+    this.cancelled = true;
+    this.fragments.length = 0;
+  }
+  get isCancelled(): boolean {
+    return this.cancelled;
+  }
 }

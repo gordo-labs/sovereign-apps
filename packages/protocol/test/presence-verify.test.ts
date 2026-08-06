@@ -14,10 +14,18 @@ const base = {
 
 test('presence verifier validates signed canonical payload and replay ordering', async () => {
   let seen = '';
-  const result = await verifyPresenceRecord(base, 'trusted-key', async (payload, signature, key) => {
-    seen = `${new TextDecoder().decode(payload)}:${signature}:${key}`;
-    return canonicalJson({ ...base, signature: undefined }).includes('hub') && signature === base.signature;
-  }, { now });
+  const result = await verifyPresenceRecord(
+    base,
+    'trusted-key',
+    async (payload, signature, key) => {
+      seen = `${new TextDecoder().decode(payload)}:${signature}:${key}`;
+      return (
+        canonicalJson({ ...base, signature: undefined }).includes('hub') &&
+        signature === base.signature
+      );
+    },
+    { now },
+  );
   assert.equal(result.ok, true);
   assert.match(seen, /hub/);
 
@@ -35,11 +43,23 @@ test('presence verifier rejects expired, future and forbidden records before sig
     calls += 1;
     return true;
   };
-  const expired = await verifyPresenceRecord({ ...base, expiresAt: '2026-08-06T11:59:59.000Z' }, 'key', verify, { now });
+  const expired = await verifyPresenceRecord(
+    { ...base, expiresAt: '2026-08-06T11:59:59.000Z' },
+    'key',
+    verify,
+    { now },
+  );
   assert.equal(expired.ok, false);
-  const future = await verifyPresenceRecord({ ...base, issuedAt: '2026-08-06T12:01:00.000Z' }, 'key', verify, { now });
+  const future = await verifyPresenceRecord(
+    { ...base, issuedAt: '2026-08-06T12:01:00.000Z' },
+    'key',
+    verify,
+    { now },
+  );
   assert.equal(future.ok, false);
-  const forbidden = await verifyPresenceRecord({ ...base, trackId: 'secret' }, 'key', verify, { now });
+  const forbidden = await verifyPresenceRecord({ ...base, trackId: 'secret' }, 'key', verify, {
+    now,
+  });
   assert.equal(forbidden.ok, false);
   assert.equal(calls, 0);
 });

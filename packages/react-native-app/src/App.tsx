@@ -10,15 +10,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  FlatList,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
+import { View, Text, TextInput, Button, FlatList, StyleSheet, ScrollView } from 'react-native';
 import { startSovereignPeer, getMessageLog, getNodeId } from './index.js';
 import { MobilePairingClient, type PairingEvent } from './hub-pairing.js';
 
@@ -104,7 +96,10 @@ export function App(): React.JSX.Element {
       await startSovereignPeer({ id: peerId.trim(), kind: 'iroh', address: addressHint.trim() });
       setConnected(true);
     } catch (error) {
-      setPairingLog((prev) => [...prev, `[connect-error] ${error instanceof Error ? error.message : String(error)}`]);
+      setPairingLog((prev) => [
+        ...prev,
+        `[connect-error] ${error instanceof Error ? error.message : String(error)}`,
+      ]);
       setConnected(false);
     }
   }, [peerId, addressHint]);
@@ -134,11 +129,11 @@ export function App(): React.JSX.Element {
           {pairingFingerprint && (
             <View style={styles.fingerprintBox}>
               <Text style={styles.fingerprintLabel}>
-                Desktop fingerprint: <Text style={styles.fingerprintValue}>{pairingFingerprint}</Text>
+                Desktop fingerprint:{' '}
+                <Text style={styles.fingerprintValue}>{pairingFingerprint}</Text>
               </Text>
               <Text style={styles.hint}>
-                Verify this matches what the desktop screen shows,
-                then confirm:
+                Verify this matches what the desktop screen shows, then confirm:
               </Text>
               <Button title="✓ Fingerprint Verified" onPress={handleVerifyFingerprint} />
             </View>
@@ -148,14 +143,14 @@ export function App(): React.JSX.Element {
           <Text style={styles.statusLabel}>
             Status: <Text style={styles.statusValue}>{pairingState}</Text>
           </Text>
-          {pairingHubId && (
-            <Text style={styles.hubLabel}>Hub: {pairingHubId}</Text>
-          )}
+          {pairingHubId && <Text style={styles.hubLabel}>Hub: {pairingHubId}</Text>}
 
           {/* Pairing log */}
           <View style={styles.pairingLog}>
             {pairingLog.map((line, i) => (
-              <Text key={i} style={styles.logLine}>{line}</Text>
+              <Text key={i} style={styles.logLine}>
+                {line}
+              </Text>
             ))}
             {pairingLog.length === 0 && (
               <Text style={styles.hint}>Pairing events will appear here...</Text>
@@ -191,9 +186,7 @@ export function App(): React.JSX.Element {
       <FlatList
         data={messages}
         keyExtractor={(item, i) => String(i)}
-        renderItem={({ item }) => (
-          <Text style={styles.message}>{item}</Text>
-        )}
+        renderItem={({ item }) => <Text style={styles.message}>{item}</Text>}
         style={styles.list}
       />
     </ScrollView>

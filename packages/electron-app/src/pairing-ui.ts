@@ -285,21 +285,27 @@ export async function createPairingWindow(params: {
 
   return {
     onPeerScanned(hubId: string) {
-      win.webContents.executeJavaScript(`window.pairingUI?.onPeerScanned(${JSON.stringify(hubId)})`);
+      win.webContents.executeJavaScript(
+        `window.pairingUI?.onPeerScanned(${JSON.stringify(hubId)})`,
+      );
     },
     onHandshakeProgress(step: string) {
-      win.webContents.executeJavaScript(`window.pairingUI?.onHandshakeProgress(${JSON.stringify(step)})`);
+      win.webContents.executeJavaScript(
+        `window.pairingUI?.onHandshakeProgress(${JSON.stringify(step)})`,
+      );
     },
     onPaired(hubId: string, capabilities: string[]) {
-      win.webContents.executeJavaScript(`window.pairingUI?.onPaired(${JSON.stringify(hubId)}, ${JSON.stringify(capabilities)})`);
+      win.webContents.executeJavaScript(
+        `window.pairingUI?.onPaired(${JSON.stringify(hubId)}, ${JSON.stringify(capabilities)})`,
+      );
     },
     onLanDiscovered(hubId: string, nodeId: string) {
-      win.webContents.executeJavaScript(`window.pairingUI?.onLanDiscovered(${JSON.stringify(hubId)}, ${JSON.stringify(nodeId)})`);
+      win.webContents.executeJavaScript(
+        `window.pairingUI?.onLanDiscovered(${JSON.stringify(hubId)}, ${JSON.stringify(nodeId)})`,
+      );
     },
     appendLog(text: string) {
-      win.webContents.executeJavaScript(
-        `window.pairingUI?.appendLog(${JSON.stringify(text)})`,
-      );
+      win.webContents.executeJavaScript(`window.pairingUI?.appendLog(${JSON.stringify(text)})`);
     },
   };
 }

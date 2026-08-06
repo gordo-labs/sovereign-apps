@@ -6,14 +6,14 @@
   "description": "Modular monorepo template for sovereign P2P apps — Electron, React Native and optional installable web presence, powered by Iroh QUIC",
   "status": "pre-alpha",
   "frequency": "weekly",
-  "lastAction": "2026-08-06T16:36:16Z",
-  "lastActionDescription": "Prepared a source-traced agent prompt pack; confirmed the public RN Iroh package and clarified web-presence scope",
+  "lastAction": "2026-08-06T17:48:20Z",
+  "lastActionDescription": "Integrated the modular communication packages, web-presence Next.js example, generator, release gates and native evidence runbook",
   "nextNeeds": [
-    "SA-000 canonical Music Hub source and compatibility baseline",
-    "SA-001 reproducible workspace and public npm bridge integration",
-    "SA-002 neutral protocol contract and framing correctness"
+    "Physical iOS/Android QR-to-auth-to-reconnect/revoke evidence",
+    "Native BLE and platform mDNS permission/runtime adapters",
+    "Clean Node 22 verification, signed support manifest, then stable release decision"
   ],
-  "blocking": "The workspace does not build; protocol, desktop/mobile adapters, auth and tests remain prototype-only",
+  "blocking": "Automated gates pass, but stable support is blocked by missing physical iOS/Android evidence, native BLE/mDNS runtime measurements, and the skipped real two-node Iroh fixture",
   "license": "MIT",
   "repository": {
     "type": "Monorepo (pnpm workspace)",
@@ -25,11 +25,16 @@
     "visibility": "public"
   },
   "packages": {
-    "protocol": "@sovereign-apps/protocol — shared Iroh QUIC types, framing, and tunnel transport",
-    "electron-app": "@sovereign-apps/electron-app — Electron desktop shell with Iroh responder/dialer",
-    "react-native-app": "@sovereign-apps/react-native-app — React Native mobile shell with public Iroh bridge",
-    "web-presence": "planned installable signed-presence module with framework-neutral core and Next.js adapter",
-    "web-presence-nextjs-example": "planned minimal Next.js integration example; not a project landing"
+    "protocol": "@sovereign-apps/protocol — versioned framing, signed presence, pairing and LAN discovery",
+    "module-kernel": "@sovereign-apps/module-kernel — neutral composition and lifecycle contracts",
+    "electron-app": "@sovereign-apps/electron-app — Electron Iroh responder/dialer, identity, QR and mDNS",
+    "react-native-app": "@sovereign-apps/react-native-app — React Native Iroh bridge, pairing and LAN browser",
+    "route-policy": "@sovereign-apps/route-policy — deterministic local-first route selection",
+    "ble-bootstrap": "@sovereign-apps/ble-bootstrap — bounded BLE bootstrap codec and adapter contracts",
+    "offline-bootstrap": "@sovereign-apps/offline-bootstrap — deep-link, file/share and NFC handoff contracts",
+    "web-presence": "@sovereign-apps/web-presence — framework-neutral signed presence with Next.js factories",
+    "web-presence-nextjs-example": "apps/landing — minimal installable Next.js web-presence example, not a landing",
+    "create-sovereign-app": "tools/create-sovereign-app — selectable module manifest generator"
   },
   "dependencies": {
     "@momics/iroh-http-node": "^0.6.1 (Electron native module)",

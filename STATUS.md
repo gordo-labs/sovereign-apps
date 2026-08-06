@@ -1,29 +1,30 @@
 # Sovereign Apps — Status
 
-## 2026-08-06 — Public baseline, not stable
+## 2026-08-06 — Public pre-alpha, integration gates passing
 
 The source has been reviewed as a candidate neutral sovereign-app template.
-It is a useful architecture sketch but is not currently functional.
+The neutral modular reference flow is implemented and its automated integration
+gates pass. It remains pre-alpha: physical native evidence is still required
+before a stable release claim.
 
 ### Verified state
 
 - GitHub: <https://github.com/gordo-labs/sovereign-apps>, public `main`.
-- Initial commit: `6c49f8b` (`chore: publish pre-alpha open-source baseline`).
-- SA-001 workspace gate prepared on branch `codex/sa001-workspace`; frozen
-  install and task discovery are now pinned to Node 22/pnpm 9.15.9.
+- Current integration branch: `codex/stabilize-sovereign-apps`; public remote is
+  <https://github.com/gordo-labs/sovereign-apps>.
+- Frozen install and task discovery are pinned to Node 22/pnpm 9.15.9. The
+  current host is Node 26, so a clean Node 22 run remains a release check.
 - Version: `0.0.1`, pre-alpha; no stable release or tag.
 - npm bridge: `@gordo-labs/react-native-iroh@0.2.0` is public and resolves with
   `latest=0.2.0`; the former registry blocker is closed.
-- Standard install: lockfile and public bridge dependency are present; clean
-  Node 22 verification remains the merge gate (local host is Node 26).
-- Build/typecheck: `@sovereign-apps/protocol` passes after SA-002; full workspace remains gated by parallel tasks.
-- Protocol tests: five non-empty Node test groups pass, including fragmentation and hostile-input cases.
-- SA-007 module kernel is implemented and tested; concrete platform adapters remain pending.
-- Lint: fails because the current prototype web app launches interactive setup.
-- Desktop/mobile pairing: not end-to-end wired or verified.
-- Wi-Fi module: serialization helpers only; no advertiser or browser runtime.
-- Web presence: current simulated landing is not the target. Planned output is
-  an installable helper plus a minimal Next.js integration example.
+- Standard install, format, lint, typecheck, build, workspace tests, contract
+  E2E, release audit and package dry-run all pass on the current host.
+- The protocol, module kernel, desktop Iroh adapter, React Native adapter,
+  secure pairing, LAN discovery, route policy, web presence and generator are
+  implemented and covered by non-empty tests.
+- The web surface is a neutral `@sovereign-apps/web-presence` package plus a
+  minimal Next.js example under `apps/landing`; it is an installable module
+  example, not a product marketing landing.
 - BLE bootstrap: optional `@sovereign-apps/ble-bootstrap` now provides a bounded,
   SHA-256 checked GATT fragment codec, timeout/cancellation session, honest
   platform-adapter contracts and an in-memory central/peripheral test adapter.
@@ -41,17 +42,20 @@ It is a useful architecture sketch but is not currently functional.
   evidence manifest are now present. CI keeps physical QR/auth/reconnect/revoke
   evidence explicit for release candidates; this does not claim that evidence.
 
-### Why this matters
+### Remaining release blockers
 
-The repository must not claim production or stable readiness. The immediate goal
-is to turn the public baseline into a reproducible, tested reference flow before
-adding further communication modules.
+- Real Electron ↔ physical iOS/Android QR, camera, secure-storage, reconnect
+  and revoke evidence is not available in this workspace.
+- Native BLE, platform mDNS permissions and device/network measurements remain
+  unimplemented; Bluetooth data transport is explicitly a no-go (bootstrap only).
+- The opt-in real two-node Iroh test is skipped unless native/runtime fixtures
+  are supplied. No stable tag or npm publish is being made.
 
 ### Next work
 
-Follow [working/BACKLOG.md](./working/BACKLOG.md), beginning with source-freeze
-task `SA-000`, then `SA-001` through `SA-006`. Every task has an atomic prompt
-under `working/prompts/`; `ORCHESTRATOR.txt` contains the merge order.
+Follow [working/BACKLOG.md](./working/BACKLOG.md) for the remaining physical
+evidence work. Every task retains an atomic prompt under `working/prompts/`;
+`ORCHESTRATOR.txt` records the dependency order.
 
 Initial CI evidence:
 <https://github.com/gordo-labs/sovereign-apps/actions/runs/31096384990>.

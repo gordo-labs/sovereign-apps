@@ -2,8 +2,14 @@
   "name": "@sovereign-apps/web-presence",
   "version": "0.0.1",
   "description": "Optional, untrusted signed presence and signaling cache for sovereign apps",
-  "repository": { "type": "git", "url": "https://github.com/gordo-labs/sovereign-apps.git", "directory": "packages/web-presence" },
-  "bugs": { "url": "https://github.com/gordo-labs/sovereign-apps/issues" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gordo-labs/sovereign-apps.git",
+    "directory": "packages/web-presence"
+  },
+  "bugs": {
+    "url": "https://github.com/gordo-labs/sovereign-apps/issues"
+  },
   "homepage": "https://github.com/gordo-labs/sovereign-apps#readme",
   "type": "module",
   "main": "dist/index.js",
@@ -40,6 +46,11 @@
     }
   },
   "sideEffects": false,
-  "engines": { "node": ">=22.12 <23" },
-  "publishConfig": { "access": "public", "provenance": true }
+  "engines": {
+    "node": ">=22.12 <23"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
 }

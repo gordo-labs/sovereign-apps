@@ -7,13 +7,19 @@ const fakeConnection = () => {
   const closes = new Set();
   const errors = new Set();
   return {
-    send: async (data) => { if (!data.length) throw new Error('empty'); },
+    send: async (data) => {
+      if (!data.length) throw new Error('empty');
+    },
     onMessage: (fn) => (messages.add(fn), () => messages.delete(fn)),
     onClose: (fn) => (closes.add(fn), () => closes.delete(fn)),
     onError: (fn) => (errors.add(fn), () => errors.delete(fn)),
     isClosed: () => false,
-    close: async () => { for (const fn of closes) fn(); },
-    emit: (data) => { for (const fn of messages) fn(data); },
+    close: async () => {
+      for (const fn of closes) fn();
+    },
+    emit: (data) => {
+      for (const fn of messages) fn(data);
+    },
   };
 };
 
@@ -25,26 +31,54 @@ function fakeBridge() {
     close: async () => {},
   };
   return {
-    bridgeVersion: () => '0.2.0-test', nodeId: () => 'local-z32', start: async () => {},
-    stop: async () => {}, isRunning: () => true,
-    connect: async () => connection, connectTarget: async () => connection,
-    openSession: async () => session, openTargetSession: async () => session,
+    bridgeVersion: () => '0.2.0-test',
+    nodeId: () => 'local-z32',
+    start: async () => {},
+    stop: async () => {},
+    isRunning: () => true,
+    connect: async () => connection,
+    connectTarget: async () => connection,
+    openSession: async () => session,
+    openTargetSession: async () => session,
     connection,
   };
 }
 
 test('normalizes direct and relay candidates into typed targets', () => {
-  assert.deepEqual(normalizeCandidate({ id: 'peer', kind: 'iroh', address: 'ip:192.0.2.1:4433' }).target, {
-    kind: 'endpoint-address', nodeId: 'peer', directAddresses: ['192.0.2.1:4433'], relayUrl: null,
-  });
-  assert.deepEqual(normalizeCandidate({ id: 'peer', kind: 'iroh', address: 'https://relay.example' }).target, {
-    kind: 'endpoint-address', nodeId: 'peer', directAddresses: [], relayUrl: 'https://relay.example',
-  });
+  assert.deepEqual(
+    normalizeCandidate({ id: 'peer', kind: 'iroh', address: 'ip:192.0.2.1:4433' }).target,
+    {
+      kind: 'endpoint-address',
+      nodeId: 'peer',
+      directAddresses: ['192.0.2.1:4433'],
+      relayUrl: null,
+    },
+  );
+  assert.deepEqual(
+    normalizeCandidate({ id: 'peer', kind: 'iroh', address: 'https://relay.example' }).target,
+    {
+      kind: 'endpoint-address',
+      nodeId: 'peer',
+      directAddresses: [],
+      relayUrl: 'https://relay.example',
+    },
+  );
 });
 
 test('rejects display-only node ids and mismatched JSON tickets', () => {
-  assert.throws(() => normalizeCandidate({ id: 'peer', kind: 'iroh', address: 'peer' }), /not dialable/);
-  assert.throws(() => normalizeCandidate({ id: 'peer', kind: 'iroh', address: '{"id":"other","addrs":["https://relay.example"]}' }), /does not match/);
+  assert.throws(
+    () => normalizeCandidate({ id: 'peer', kind: 'iroh', address: 'peer' }),
+    /not dialable/,
+  );
+  assert.throws(
+    () =>
+      normalizeCandidate({
+        id: 'peer',
+        kind: 'iroh',
+        address: '{"id":"other","addrs":["https://relay.example"]}',
+      }),
+    /does not match/,
+  );
 });
 
 test('endpoint lifecycle is explicit and stream frames are not double-framed', async () => {
@@ -65,7 +99,9 @@ test('endpoint lifecycle is explicit and stream frames are not double-framed', a
 
 test('native unavailable does not become ready', async () => {
   const bridge = fakeBridge();
-  bridge.start = async () => { throw new Error('TurboModule missing'); };
+  bridge.start = async () => {
+    throw new Error('TurboModule missing');
+  };
   const endpoint = new ReactNativeIrohEndpoint({ bridge });
   await assert.rejects(endpoint.start({ signal: new AbortController().signal }), /failed to start/);
   assert.equal(endpoint.state, 'failed');

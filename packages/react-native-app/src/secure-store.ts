@@ -8,15 +8,24 @@ export interface SecureStorage {
 }
 
 export class PairingTrustStore {
-  constructor(private readonly storage: SecureStorage, private readonly key = 'sovereign-apps/pairing-grants/v1') {}
+  constructor(
+    private readonly storage: SecureStorage,
+    private readonly key = 'sovereign-apps/pairing-grants/v1',
+  ) {}
   async list(): Promise<PairingGrant[]> {
     const raw = await this.storage.get(this.key);
     if (!raw) return [];
     try {
       const parsed: unknown = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
-      return parsed.filter((entry): entry is PairingGrant => Boolean(entry && typeof entry === 'object' && typeof (entry as PairingGrant).id === 'string'));
-    } catch { return []; }
+      return parsed.filter((entry): entry is PairingGrant =>
+        Boolean(
+          entry && typeof entry === 'object' && typeof (entry as PairingGrant).id === 'string',
+        ),
+      );
+    } catch {
+      return [];
+    }
   }
   async save(grant: PairingGrant): Promise<void> {
     const grants = (await this.list()).filter((entry) => entry.id !== grant.id);
@@ -25,9 +34,21 @@ export class PairingTrustStore {
   }
   async revoke(id: string): Promise<void> {
     const grants = await this.list();
-    await this.saveAll(grants.map((grant) => grant.id === id ? { ...grant, revokedAt: new Date().toISOString() } : grant));
+    await this.saveAll(
+      grants.map((grant) =>
+        grant.id === id ? { ...grant, revokedAt: new Date().toISOString() } : grant,
+      ),
+    );
   }
-  async revokeAll(): Promise<void> { await this.saveAll((await this.list()).map((grant) => ({ ...grant, revokedAt: new Date().toISOString() }))); }
-  async resetIdentity(): Promise<void> { await this.storage.remove(this.key); }
-  private async saveAll(grants: PairingGrant[]): Promise<void> { await this.storage.set(this.key, JSON.stringify(grants)); }
+  async revokeAll(): Promise<void> {
+    await this.saveAll(
+      (await this.list()).map((grant) => ({ ...grant, revokedAt: new Date().toISOString() })),
+    );
+  }
+  async resetIdentity(): Promise<void> {
+    await this.storage.remove(this.key);
+  }
+  private async saveAll(grants: PairingGrant[]): Promise<void> {
+    await this.storage.set(this.key, JSON.stringify(grants));
+  }
 }

@@ -3,7 +3,11 @@
   "version": "0.1.0",
   "description": "Generate a neutral, modular Sovereign Apps starter",
   "type": "module",
-  "bin": { "create-sovereign-app": "./src/cli.mjs" },
-  "scripts": { "test": "node --test test/*.test.mjs" },
+  "bin": {
+    "create-sovereign-app": "./src/cli.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
   "license": "MIT"
 }

@@ -47,10 +47,7 @@ function uint8ToBase64Url(buf: Uint8Array): string {
   for (let i = 0; i < buf.byteLength; i++) {
     binary += String.fromCharCode(buf[i]);
   }
-  return btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 /**
@@ -92,9 +89,7 @@ export function buildResponse(
     nonce: challenge.nonce,
     signature: uint8ToBase64Url(signatureBytes),
     publicKey,
-    granted: challenge.requested.filter((c) =>
-      DEFAULT_GRANTED.includes(c),
-    ),
+    granted: challenge.requested.filter((c) => DEFAULT_GRANTED.includes(c)),
   };
 }
 

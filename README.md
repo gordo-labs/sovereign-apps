@@ -4,8 +4,8 @@ An open-source monorepo intended to become a neutral, modular template for
 desktop-to-mobile sovereign applications. Its target is authenticated peer-to-peer
 communication with no application-specific domain logic.
 
-> **Status: pre-alpha public baseline.** The repository is not currently
-> installable, buildable, secure, or end-to-end functional. Do not use it in
+> **Status: pre-alpha public baseline.** Automated workspace and contract gates
+> pass, but physical native evidence is still required and this is not for
 > production. See [STATUS.md](./STATUS.md) and
 > [the 2026-08-06 audit](./docs/AUDIT-2026-08-06.md).
 
@@ -13,11 +13,11 @@ communication with no application-specific domain logic.
 
 | Surface | Intended responsibility | Current reality |
 | --- | --- | --- |
-| `@sovereign-apps/protocol` | Neutral framing, pairing, auth, capabilities | Skeleton; TypeScript errors and incomplete protocol |
-| `@sovereign-apps/electron-app` | Desktop Iroh endpoint and QR pairing UI | Prototype; native adapter and runtime are broken |
-| `@sovereign-apps/react-native-app` | Mobile QR client and Iroh bridge adapter | Prototype; no runnable native app; public bridge `0.2.0` now resolves |
-| planned `web-presence` | Installable signed-presence helper with framework adapters | Not implemented; current `apps/landing` is a simulated preview to replace |
-| planned Next.js example | Minimal host integration for `web-presence` | Not implemented; explicitly not a project/marketing landing |
+| `@sovereign-apps/protocol` | Neutral framing, pairing, auth, capabilities | Implemented with validation, signed presence and negative tests |
+| `@sovereign-apps/electron-app` | Desktop Iroh endpoint and QR pairing UI | Real adapter, identity persistence, QR and LAN discovery; runtime fixture pending |
+| `@sovereign-apps/react-native-app` | Mobile QR client and Iroh bridge adapter | Published bridge `0.2.0` adapter and trust boundary; physical app evidence pending |
+| `@sovereign-apps/web-presence` | Installable signed-presence helper with framework adapters | Framework-neutral core plus Next.js route factories |
+| `apps/landing` | Minimal host integration for `web-presence` | Neutral Next.js web-presence example, not a product/marketing landing |
 
 ## Target architecture
 
@@ -35,11 +35,10 @@ verification → authenticated pairing → framed bidirectional Iroh QUIC channe
 
 ## Current validation
 
-Run with Node 22. `@gordo-labs/react-native-iroh@0.2.0` is now public on npm,
-removing the original registry 404, but a clean install is not yet certified:
-the repo still lacks a pinned pnpm/lockfile and has React/RN peer mismatches.
-`pnpm build` and `pnpm typecheck` fail, while `pnpm test` reports success with
-zero tests.
+Run with Node 22 and pnpm 9.15.9. On the current host, frozen install, format,
+lint, typecheck, build, tests, contract E2E, release audit and package dry-run
+pass. The native release manifest remains intentionally blocked until physical
+iOS/Android evidence is recorded.
 
 The exact evidence and reproduction commands are recorded in
 [docs/AUDIT-2026-08-06.md](./docs/AUDIT-2026-08-06.md).

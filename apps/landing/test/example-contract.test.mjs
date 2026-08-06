@@ -19,7 +19,10 @@ test('example has the documented neutral route surface', async () => {
 });
 
 test('example has no fake peers or product landing copy', async () => {
-  const source = await Promise.all([read('src/app/page.tsx'), read('src/app/presence-inspector.tsx')]);
+  const source = await Promise.all([
+    read('src/app/page.tsx'),
+    read('src/app/presence-inspector.tsx'),
+  ]);
   const joined = source.join('\n');
   assert.doesNotMatch(joined, /PRISONS|fake|simulat|connected peer|Interactive Demo/i);
   assert.match(joined, /untrusted|not proof|not-found|error/);
@@ -27,6 +30,9 @@ test('example has no fake peers or product landing copy', async () => {
 
 test('diagnostic output is sanitized and excludes signatures and addresses', async () => {
   const source = await read('src/app/presence-inspector.tsx');
-  assert.doesNotMatch(source, /record\.(signature|address|payload)|<dt>Signature|<dt>Address|<dt>Payload/);
+  assert.doesNotMatch(
+    source,
+    /record\.(signature|address|payload)|<dt>Signature|<dt>Address|<dt>Payload/,
+  );
   assert.match(source, /candidateKinds/);
 });

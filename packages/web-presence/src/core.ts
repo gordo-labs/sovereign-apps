@@ -58,8 +58,12 @@ export class WebPresenceCore<TPresence = unknown, TSignal = unknown> {
   private bodySize(value: unknown, signaling = false) {
     let size: number;
     try {
-      size = this.options.codec.byteLength?.(value) ?? new TextEncoder().encode(JSON.stringify(value)).byteLength;
-    } catch { this.reject('malformed'); }
+      size =
+        this.options.codec.byteLength?.(value) ??
+        new TextEncoder().encode(JSON.stringify(value)).byteLength;
+    } catch {
+      this.reject('malformed');
+    }
     if (size > (signaling ? this.limits.maxSignalingBytes : this.limits.maxPresenceBytes))
       this.reject('too_large');
     if (this.hasForbiddenKey(value)) this.reject('forbidden_metadata');
@@ -67,7 +71,9 @@ export class WebPresenceCore<TPresence = unknown, TSignal = unknown> {
   private hasForbiddenKey(value: unknown): boolean {
     if (!value || typeof value !== 'object') return false;
     if (Array.isArray(value)) return value.some((item) => this.hasForbiddenKey(item));
-    return Object.entries(value).some(([key, nested]) => this.limits.forbiddenKeys.has(key) || this.hasForbiddenKey(nested));
+    return Object.entries(value).some(
+      ([key, nested]) => this.limits.forbiddenKeys.has(key) || this.hasForbiddenKey(nested),
+    );
   }
   async putPresence(value: unknown, request?: Request, expectedIdentity?: string): Promise<void> {
     this.bodySize(value);
@@ -89,13 +95,19 @@ export class WebPresenceCore<TPresence = unknown, TSignal = unknown> {
     await this.options.presence.deleteExpired(this.now(), this.limits.maxDeletesPerRequest);
     return this.options.presence.get(identity);
   }
-  async putSignaling(value: unknown, request?: Request, expectedIdentity?: string, expectedSessionId?: string): Promise<void> {
+  async putSignaling(
+    value: unknown,
+    request?: Request,
+    expectedIdentity?: string,
+    expectedSessionId?: string,
+  ): Promise<void> {
     if (!this.options.signaling || !this.options.codec.verifySignaling)
       this.reject('signaling_unavailable');
     this.bodySize(value, true);
     const now = this.now();
     const verified = this.options.codec.verifySignaling!(value, { nowMs: now, expectedIdentity });
-    if (expectedSessionId && verified.sessionId !== expectedSessionId) this.reject('session_mismatch');
+    if (expectedSessionId && verified.sessionId !== expectedSessionId)
+      this.reject('session_mismatch');
     this.validate(verified, true, request, verified.identity);
     const key = `${verified.identity}:${verified.sessionId}`;
     if (!this.allow('signal', key, request)) this.reject('rate_limited');
