@@ -44,6 +44,6 @@ run('pnpm', ['build'], 'workspace build');
 // pnpm 9 has no pack dry-run flag. npm's dry-run mode is package-manager
 // independent and does not write tarballs, so use it per publishable package.
 for (const dir of releaseDirs)
-  run('npm', ['pack', '--dry-run', '--ignore-scripts', '--json'], `package dry-run (${dir})`, dir);
+  run('npm', ['pack', '--dry-run', '--json'], `package dry-run (${dir})`, dir);
 run('pnpm', ['release:install-test'], 'external package install test');
 console.log(`release gates passed: ${packageJsons.length} workspace manifests checked`);
