@@ -2,6 +2,7 @@
   "name": "@sovereign-apps/react-native-app",
   "version": "0.0.1",
   "description": "Sovereign App Template — React Native shell with Iroh QUIC P2P networking",
+  "type": "module",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

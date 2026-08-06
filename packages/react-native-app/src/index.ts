@@ -35,3 +35,4 @@ export async function getNodeId(): Promise<string | null> {
 }
 export function getTransportEndpoint(): ReactNativeIrohEndpoint | null { return endpoint; }
 export * from './secure-store.js';
+export * from './lan-discovery.js';

@@ -20,6 +20,10 @@
     "./pairing": {
       "types": "./dist/secure-pairing.d.ts",
       "import": "./dist/secure-pairing.js"
+    },
+    "./lan-discovery": {
+      "types": "./dist/lan-discovery.d.ts",
+      "import": "./dist/lan-discovery.js"
     }
   },
   "files": [
@@ -38,6 +42,8 @@
     "test": "pnpm build && node --test test/*.test.ts"
   },
   "dependencies": {
+    "bonjour-service": "^1.3.0",
+    "@sovereign-apps/module-kernel": "workspace:*",
     "@momics/iroh-http-node": "^0.6.1",
     "@sovereign-apps/protocol": "workspace:*",
     "@types/qrcode": "^1.5.5",

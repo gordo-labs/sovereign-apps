@@ -10,5 +10,6 @@ export * from './dialer.js';
 export * from './pairing.js';
 export * from './auth.js';
 export * from './wifi-direct.js';
+export * from './lan-discovery.js';
 export * from './hub-pairing.js';
 export * from './secure-pairing.js';
