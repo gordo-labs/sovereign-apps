@@ -36,6 +36,10 @@ It is a useful architecture sketch but is not currently functional.
 - Web presence core: implemented in `packages/web-presence` with memory-only
   development adapters and framework-neutral Next route factories; it is not a
   marketing landing and is not yet a stable release.
+- SA-006 release gates: deterministic in-process desktop↔mobile contract E2E,
+  non-empty-suite enforcement, package dry-run coverage and a machine-readable
+  evidence manifest are now present. CI keeps physical QR/auth/reconnect/revoke
+  evidence explicit for release candidates; this does not claim that evidence.
 
 ### Why this matters
 
@@ -51,3 +55,11 @@ under `working/prompts/`; `ORCHESTRATOR.txt` contains the merge order.
 
 Initial CI evidence:
 <https://github.com/gordo-labs/sovereign-apps/actions/runs/31096384990>.
+
+The current SA-006 gate is `pnpm release:gates`. It deliberately does not tag,
+publish, or promote this pre-alpha repository.
+
+SA-012 now supplies the native support matrix, sanitized evidence schema,
+operator runbook, and cross-OS workflow. Physical iOS/Android host projects and
+hardware evidence are intentionally still blocking; see
+[`docs/NATIVE-RELEASE-OPERATIONS.md`](docs/NATIVE-RELEASE-OPERATIONS.md).

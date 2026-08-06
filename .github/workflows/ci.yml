@@ -6,9 +6,20 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+env:
+  CI: true
+
 jobs:
-  workspace:
+  gates:
+    name: ${{ matrix.gate }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        gate: [format, lint, typecheck, test, contract-e2e, build, package-dry-run]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -16,12 +27,42 @@ jobs:
           version: 9.15.9
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Enumerate workspace tasks
+      - name: Frozen install
+        run: pnpm install --frozen-lockfile
+      - name: Format
+        if: matrix.gate == 'format'
+        run: pnpm format:check
+      - name: Lint
+        if: matrix.gate == 'lint'
+        run: pnpm lint
+      - name: Typecheck
+        if: matrix.gate == 'typecheck'
+        run: pnpm typecheck
+      - name: Tests
+        if: matrix.gate == 'test'
+        run: pnpm test
+      - name: Contract E2E
+        if: matrix.gate == 'contract-e2e'
+        run: pnpm test:e2e
+      - name: Build
+        if: matrix.gate == 'build'
+        run: pnpm build
+      - name: Package dry-run
+        if: matrix.gate == 'package-dry-run'
+        run: pnpm -r --if-present pack --dry-run
+
+  stable-block:
+    name: Stable is blocked until every gate and physical evidence pass
+    if: always()
+    needs: gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require all automated gates
+        run: test "${{ needs.gates.result }}" = success
+      - name: Keep physical release evidence explicit
         run: |
-          pnpm --version
-          pnpm -r list --depth -1
-          pnpm run
-          pnpm tasks
+          test -f docs/support-evidence.json || exit 1
+          echo "Physical iOS/Android evidence remains an RC requirement; CI does not fabricate it."

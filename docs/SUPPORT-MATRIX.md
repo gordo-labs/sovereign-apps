@@ -23,6 +23,16 @@ claim that the platform adapter is implemented.
 No row marked “implemented adapter” may be promoted to supported until a
 platform-specific agent supplies runtime evidence.
 
+Machine-readable evidence consumed by release documentation lives in
+[`support-evidence.json`](./support-evidence.json). It contains no credentials,
+private endpoints, device identifiers, or QR screenshots.
+
+SA-012 expands the platform/build decision and physical evidence contract in
+[`NATIVE-RELEASE-OPERATIONS.md`](./NATIVE-RELEASE-OPERATIONS.md) and the
+machine-readable [`release/support-matrix.json`](../release/support-matrix.json).
+Desktop rows mean a clean package build only; iOS/Android rows cannot become
+stable-supported without all eight physical cases and a signed, fresh manifest.
+
 Bluetooth data is intentionally absent from the supported-module set. Its
 verified payload limit is zero until [ADR-015](./ADR-015-bluetooth-transport.md)
 is reopened with physical evidence.
