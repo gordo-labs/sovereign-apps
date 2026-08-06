@@ -1,0 +1,26 @@
+{
+  "name": "@sovereign-apps/react-native-app",
+  "version": "0.0.1",
+  "description": "Sovereign App Template — React Native shell with Iroh QUIC P2P networking",
+  "license": "MIT",
+  "scripts": {
+    "build:android": "react-native build-android",
+    "build:ios": "react-native build-ios",
+    "start": "react-native start",
+    "lint": "eslint .",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@sovereign-apps/protocol": "workspace:*",
+    "react-native": "^0.81",
+    "react": "^18.3"
+  },
+  "peerDependencies": {
+    "@gordo-labs/react-native-iroh": "^0.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6",
+    "@types/react": "^18",
+    "eslint": "^9"
+  }
+}

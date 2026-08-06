@@ -1,0 +1,24 @@
+{
+  "name": "sovereign-apps",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Monorepo template for sovereign P2P apps — Electron + React Native + Landing, powered by Iroh QUIC",
+  "scripts": {
+    "build": "pnpm --recursive build",
+    "dev": "pnpm --recursive dev",
+    "clean": "pnpm --recursive clean",
+    "lint": "pnpm --recursive lint",
+    "test": "pnpm --recursive test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,cjs,json,yaml}\"",
+    "typecheck": "pnpm --recursive typecheck"
+  },
+  "engines": {
+    "node": ">=22.12 <23",
+    "pnpm": ">=9"
+  },
+  "devDependencies": {
+    "typescript": "^5.6",
+    "prettier": "^3.4",
+    "@types/node": "^22"
+  }
+}

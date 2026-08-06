@@ -1,0 +1,22 @@
+{
+  "name": "@sovereign-apps/protocol",
+  "version": "0.0.1",
+  "description": "Shared Iroh QUIC protocol types, framing, and connection primitives for Sovereign Apps",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "zod": "^3.23"
+  },
+  "devDependencies": {
+    "typescript": "^5.6"
+  }
+}

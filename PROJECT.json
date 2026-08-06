@@ -1,0 +1,42 @@
+{
+  "name": "Sovereign Apps",
+  "slug": "sovereign-apps",
+  "type": "public-app",
+  "version": "0.0.1",
+  "description": "Monorepo template for sovereign P2P apps — Electron + React Native + Landing, powered by Iroh QUIC",
+  "status": "pre-alpha",
+  "frequency": "weekly",
+  "lastAction": "2026-08-06T11:30:00Z",
+  "lastActionDescription": "Audited the initial template and prepared a public, explicitly pre-alpha baseline",
+  "nextNeeds": [
+    "SA-001 reproducible workspace and dependency installation",
+    "SA-002 protocol contract and framing correctness",
+    "SA-003 desktop Iroh adapter and Electron runtime"
+  ],
+  "blocking": "The workspace does not build and @gordo-labs/react-native-iroh is not published to npm",
+  "license": "MIT",
+  "repository": {
+    "type": "Monorepo (pnpm workspace)",
+    "url": "https://github.com/gordo-labs/sovereign-apps"
+  },
+  "git": {
+    "enabled": true,
+    "defaultBranch": "main",
+    "visibility": "public"
+  },
+  "packages": {
+    "protocol": "@sovereign-apps/protocol — shared Iroh QUIC types, framing, and tunnel transport",
+    "electron-app": "@sovereign-apps/electron-app — Electron desktop shell with Iroh responder/dialer",
+    "react-native-app": "@sovereign-apps/react-native-app — React Native mobile shell with Iroh bridge",
+    "landing": "@sovereign-apps/landing — Next.js PRISONS preview landing page"
+  },
+  "dependencies": {
+    "@momics/iroh-http-node": "^0.6.1 (Electron native module)",
+    "@gordo-labs/react-native-iroh": "^0.2.0 (React Native UniFFI bridge)"
+  },
+  "protocol": {
+    "alpn": "sovereign-apps/1",
+    "framing": "4-byte big-endian length + JSON payload (max 2MB)",
+    "transport": "Iroh QUIC with n0 relay + direct hole-punch"
+  }
+}

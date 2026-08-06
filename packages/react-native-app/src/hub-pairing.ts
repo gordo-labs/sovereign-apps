@@ -1,0 +1,186 @@
+/**
+ * Sovereign App Template — React Native pairing client.
+ *
+ * Mobile-side pairing flow for initial WiFi setup:
+ *   1. Scan QR from desktop (or auto-discover via LAN)
+ *   2. Parse pairing payload
+ *   3. Verify fingerprint visually
+ *   4. Complete auth handshake
+ *   5. Store paired peer record
+ *
+ * Mirrors Music Hub's MobileHubClient architecture.
+ */
+
+import type {
+  PairingQrPayload,
+  AuthChallenge,
+  AuthResponse,
+  AuthGrant,
+  PairedPeer,
+  PeerCapability,
+  LanPeerAdvertisement,
+} from '@sovereign-apps/protocol';
+import {
+  HubPairing,
+  buildResponse,
+  generateNonce,
+  deriveFingerprint,
+  DEFAULT_LAN_PORT,
+  ADVERTISE_INTERVAL_MS,
+  LAN_SCAN_TIMEOUT_MS,
+  buildLanAdvertisement,
+  parseLanAdvertisement,
+} from '@sovereign-apps/protocol';
+
+export type PairingState =
+  | 'scanning'
+  | 'qr_scanned'
+  | 'fingerprint_verified'
+  | 'handshake'
+  | 'paired'
+  | 'error';
+
+export interface PairingEvent {
+  type: PairingState;
+  detail?: string;
+  hubId?: string;
+  fingerprint?: string;
+  error?: string;
+}
+
+export type PairingEventHandler = (event: PairingEvent) => void;
+
+/**
+ * Mobile-side pairing client.
+ * Handles QR scanning, LAN discovery, and auth handshake.
+ */
+export class MobilePairingClient {
+  private listeners: PairingEventHandler[] = [];
+  private state: PairingState = 'scanning';
+  private paired: PairedPeer | null = null;
+  private scanTimeout?: ReturnType<typeof setTimeout>;
+
+  constructor() {
+    this.state = 'scanning';
+  }
+
+  /** Register a pairing event handler. */
+  onEvent(handler: PairingEventHandler): void {
+    this.listeners.push(handler);
+  }
+
+  /** Remove an event handler. */
+  offEvent(handler: PairingEventHandler): void {
+    const idx = this.listeners.indexOf(handler);
+    if (idx >= 0) this.listeners.splice(idx, 1);
+  }
+
+  /** Emit a state change event. */
+  private emit(event: PairingEvent): void {
+    for (const listener of this.listeners) listener(event);
+  }
+
+  /**
+   * Handle a scanned QR payload.
+   * Sets state to 'qr_scanned', emits the event.
+   */
+  handleQrScan(qrData: string): {
+    hubId: string;
+    nodeId: string;
+    fingerprint: string;
+    bootstrap: string | null;
+  } | { error: string } {
+    try {
+      const parsed = HubPairing.parseQrPayload(qrData);
+      const fingerprint = HubPairing.fingerprint(parsed.nodeId);
+      this.state = 'qr_scanned';
+      this.emit({
+        type: 'qr_scanned',
+        hubId: parsed.hubId,
+        fingerprint,
+      });
+      return {
+        hubId: parsed.hubId,
+        nodeId: parsed.nodeId,
+        fingerprint,
+        bootstrap: parsed.bootstrap,
+      };
+    } catch (err) {
+      this.state = 'error';
+      const msg = err instanceof Error ? err.message : String(err);
+      this.emit({ type: 'error', error: msg });
+      return { error: msg };
+    }
+  }
+
+  /**
+   * User has verified the fingerprint matches the desktop screen.
+   * Transitions to 'fingerprint_verified'.
+   */
+  verifyFingerprint(): void {
+    if (this.state !== 'qr_scanned') return;
+    this.state = 'fingerprint_verified';
+    this.emit({ type: 'fingerprint_verified' });
+  }
+
+  /**
+   * Build an auth response for a received challenge.
+   *
+   * @param challenge - The challenge from the desktop peer
+   * @param signFn - Ed25519 signing function
+   * @param publicKey - Base64url public key
+   * @returns The response and parsed data
+   */
+  buildAuthResponse(
+    challenge: AuthChallenge,
+    signFn: (data: Uint8Array) => Uint8Array,
+    publicKey: string,
+  ): {
+    response: AuthResponse;
+  } {
+    if (this.state !== 'fingerprint_verified') {
+      throw new Error('Must verify fingerprint before auth handshake');
+    }
+    const response = buildResponse(challenge, signFn, publicKey);
+    this.state = 'handshake';
+    this.emit({ type: 'handshake', detail: 'response sent' });
+    return { response };
+  }
+
+  /**
+   * Handle a grant from the desktop peer.
+   */
+  handleGrant(grant: AuthGrant, nodeId: string, publicKey: string): PairedPeer {
+    const peer = {
+      hubId: grant.grantor,
+      nodeId,
+      publicKey,
+      capabilities: grant.capabilities,
+      pairedAt: new Date().toISOString(),
+      expiresAt: grant.expiresAt,
+      directAddrs: [],
+    };
+    this.paired = peer;
+    this.state = 'paired';
+    this.emit({ type: 'paired', hubId: grant.grantor });
+    return peer;
+  }
+
+  /** Get current state. */
+  getState(): PairingState {
+    return this.state;
+  }
+
+  /** Get the paired peer record. */
+  getPairedPeer(): PairedPeer | null {
+    return this.paired;
+  }
+
+  /** Reset the client for a new pairing session. */
+  reset(): void {
+    this.state = 'scanning';
+    this.paired = null;
+    if (this.scanTimeout) clearTimeout(this.scanTimeout);
+    this.emit({ type: 'scanning' });
+  }
+}
