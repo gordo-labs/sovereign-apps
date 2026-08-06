@@ -1,0 +1,90 @@
+name: Native release operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Release channel to evaluate
+        required: true
+        default: rc
+        type: choice
+        options: [ci, rc, stable]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  desktop-build:
+    name: Desktop ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: desktop-macos-arm64
+            runner: macos-14
+          - platform: desktop-macos-x64
+            runner: macos-13
+          - platform: desktop-windows-x64
+            runner: windows-2022
+          - platform: desktop-linux-x64-glibc
+            runner: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build and record evidence
+        id: native
+        continue-on-error: true
+        env:
+          SOVEREIGN_EVIDENCE_DIR: artifacts/support-evidence
+        run: node scripts/release/run-native-build.mjs ${{ matrix.platform }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: support-evidence-${{ matrix.platform }}
+          path: artifacts/support-evidence
+          if-no-files-found: error
+
+  manifest:
+    name: Aggregate support manifest
+    needs: desktop-build
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: support-evidence-*
+          path: artifacts/support-evidence
+          merge-multiple: true
+      - name: Generate red/green manifest
+        env:
+          SOVEREIGN_EVIDENCE_DIR: artifacts/support-evidence
+          SOVEREIGN_EVIDENCE_PRIVATE_KEY: ${{ secrets.SOVEREIGN_EVIDENCE_PRIVATE_KEY }}
+        run: |
+          node scripts/release/generate-support-manifest.mjs \
+            --channel "${{ github.event.inputs.channel || 'ci' }}" \
+            --evidence-dir artifacts/support-evidence \
+            --output artifacts/support-manifest.json \
+            ${{ github.event.inputs.channel == 'stable' && '--max-age-hours 72 --require-signature' || '' }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: support-manifest-${{ github.sha }}
+          path: artifacts/support-manifest.json
+          if-no-files-found: error
