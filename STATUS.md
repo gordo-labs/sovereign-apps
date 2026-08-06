@@ -29,6 +29,10 @@ It is a useful architecture sketch but is not currently functional.
   platform-adapter contracts and an in-memory central/peripheral test adapter.
   Native CoreBluetooth/Android/desktop adapters and physical-device gates remain
   pending; no BLE bulk-data or background-availability claim is made.
+- Bluetooth data transport: explicit SA-015 no-go. There are no native GATT,
+  L2CAP or Classic adapters or physical throughput/reconnect/background
+  measurements; Bluetooth remains bootstrap-only and has a zero verified
+  payload limit. See `docs/ADR-015-bluetooth-transport.md`.
 - Web presence core: implemented in `packages/web-presence` with memory-only
   development adapters and framework-neutral Next route factories; it is not a
   marketing landing and is not yet a stable release.

@@ -8,9 +8,18 @@ export const MODULES = Object.freeze({
   reactNative: { kind: 'runtime', platforms: ['android', 'ios'], requires: ['protocol', 'kernel'] },
   qr: { kind: 'bootstrap', platforms: ['electron', 'android', 'ios'], requires: ['protocol', 'kernel'] },
   mdns: { kind: 'discovery', platforms: ['electron', 'android', 'ios'], requires: ['protocol', 'kernel'] },
+  routePolicy: { kind: 'routing', platforms: ['electron', 'android', 'ios'], requires: ['protocol', 'kernel'] },
+  bleBootstrap: { kind: 'bootstrap', platforms: ['android', 'ios'], requires: ['protocol', 'kernel'], optional: true },
+  offlineBootstrap: { kind: 'bootstrap', platforms: ['android', 'ios', 'web'], requires: ['protocol', 'kernel'], optional: true },
   webPresence: { kind: 'presence', platforms: ['web'], requires: ['protocol', 'kernel'] },
   nextExample: { kind: 'example', platforms: ['web'], requires: ['webPresence'] },
   exampleCodec: { kind: 'codec', platforms: ['electron', 'android', 'ios', 'web'], optional: true },
+});
+
+// SA-015 is an explicit no-go: reject this name instead of allowing a generated
+// app to imply that an unmeasured Bluetooth data adapter exists.
+export const UNSUPPORTED_MODULES = Object.freeze({
+  bluetoothTransport: 'SA-015 no-go: Bluetooth is bootstrap-only until native physical evidence is published',
 });
 
 const SAFE = /^[a-z][a-z0-9-]{0,62}$/;
@@ -37,7 +46,10 @@ export function validateConfig(input) {
   if (!/^@[a-z0-9][a-z0-9-]*$/.test(config.packageScope)) errors.push('packageScope must be an npm scope such as @sovereign-apps');
   if (!config.platforms.length) errors.push('at least one platform is required');
   for (const platform of config.platforms) if (!PLATFORMS.includes(platform)) errors.push(`unsupported platform: ${platform}`);
-  for (const moduleId of config.modules) if (!MODULES[moduleId]) errors.push(`unknown module: ${moduleId}`);
+  for (const moduleId of config.modules) {
+    if (UNSUPPORTED_MODULES[moduleId]) errors.push(UNSUPPORTED_MODULES[moduleId]);
+    else if (!MODULES[moduleId]) errors.push(`unknown module: ${moduleId}`);
+  }
   for (const id of ['protocol', 'kernel']) if (!config.modules.includes(id)) config.modules.unshift(id);
   for (const id of config.modules) {
     const spec = MODULES[id];
@@ -92,6 +104,9 @@ function filesFor(config) {
   if (selected.includes('reactNative')) files.set('src/react-native/README.md', '# React Native client\n\nWire this module to `@sovereign-apps/react-native-app`, which consumes the public `@gordo-labs/react-native-iroh` bridge.\n');
   if (selected.includes('webPresence')) files.set('src/web-presence/README.md', '# Web presence\n\nInstall `@sovereign-apps/web-presence` and expose its framework-neutral core through your web adapter. Presence is an optional untrusted cache; verify identity and authorization at the peer.\n');
   if (selected.includes('nextExample')) files.set('src/web-presence/next-example.md', '# Next.js example\n\nMount the `@sovereign-apps/web-presence/next` route factories from your own App Router route files. This is an installable example module, not a marketing landing.\n');
+  if (selected.includes('routePolicy')) files.set('src/routing/README.md', '# Route policy\n\nUse `@sovereign-apps/route-policy` to rank local/direct candidates before optional relays without weakening pairing trust.\n');
+  if (selected.includes('bleBootstrap')) files.set('src/bootstrap/ble.md', '# BLE bootstrap\n\nUse `@sovereign-apps/ble-bootstrap` only to exchange bounded bootstrap material; BLE proximity is never identity.\n');
+  if (selected.includes('offlineBootstrap')) files.set('src/bootstrap/offline.md', '# Offline bootstrap\n\nUse `@sovereign-apps/offline-bootstrap` for validated deep-link, file/share or platform NFC handoff.\n');
   if (selected.includes('exampleCodec')) files.set('src/example-codec.mjs', '/** Minimal removable codec example. Do not use for production authentication. */\nexport const exampleCodec = { capabilities: [], encode: (value) => new TextEncoder().encode(JSON.stringify(value)), decode: (bytes) => JSON.parse(new TextDecoder().decode(bytes)), authorize: () => false };\n');
   files.set('LICENSES.md', '# Attribution\n\nThis generated scaffold is MIT licensed. Genericized patterns are derived from MIT-licensed Gordo Labs Music Streaming Hub code and the public `@gordo-labs/react-native-iroh` bridge. Confirm and preserve upstream notices when adopting implementation code.\n');
   return files;

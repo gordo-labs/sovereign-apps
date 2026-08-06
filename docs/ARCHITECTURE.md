@@ -112,5 +112,5 @@ route aliases or a product landing page.
 | Iroh relay | Data fallback | Bound by pairing/auth | Relay required |
 | Web presence | Discovery/signaling fallback | Untrusted signed cache | Optional server |
 | BLE | Nearby bootstrap first | Untrusted until pairing | None |
-| Bluetooth data | Optional/experimental only if measured | Bound by pairing/auth | None |
+| Bluetooth data | Not shipped; bootstrap-only until ADR-015 exit criteria pass | N/A | N/A |
 | NFC/deep-link/file | Offline bootstrap handoff | Untrusted until pairing | None |

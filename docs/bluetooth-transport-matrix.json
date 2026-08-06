@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "status": "bootstrap-only",
+  "asOf": "2026-08-06",
+  "verifiedPayloadLimitBytes": 0,
+  "measurements": {
+    "status": "not-run",
+    "reason": "No native adapter or physical device is available in this repository/CI",
+    "wifiInternetDisabled": false,
+    "mtuBytes": null,
+    "throughputMbps": null,
+    "latencyP50Ms": null,
+    "latencyP95Ms": null,
+    "lossPercent": null,
+    "reconnectSeconds": null,
+    "backgroundBehavior": "not measured",
+    "longDurationHours": null
+  },
+  "rows": [
+    {
+      "pair": "electron-macos-ios",
+      "gatt": "CoreBluetooth central/peripheral APIs exist, subject to permission and lifecycle limits",
+      "l2capOrClassic": "CBL2CAPChannel is accessory/provider dependent; no general symmetric app channel contract",
+      "nativeAdapterInRepository": false,
+      "physicalEvidence": false,
+      "decision": "bootstrap-only"
+    },
+    {
+      "pair": "electron-macos-android",
+      "gatt": "CoreBluetooth and Android BluetoothGatt APIs exist, subject to permission, hardware and OEM limits",
+      "l2capOrClassic": "Android LE CoC/Classic APIs are version and profile dependent; no cross-platform app contract",
+      "nativeAdapterInRepository": false,
+      "physicalEvidence": false,
+      "decision": "bootstrap-only"
+    },
+    {
+      "pair": "electron-windows-android",
+      "gatt": "WinRT GATT and Android BluetoothGatt APIs exist, subject to role and OS support",
+      "l2capOrClassic": "Classic/RFCOMM and LE CoC are not symmetric with iOS and require platform-specific pairing",
+      "nativeAdapterInRepository": false,
+      "physicalEvidence": false,
+      "decision": "bootstrap-only"
+    },
+    {
+      "pair": "electron-linux-android",
+      "gatt": "BlueZ and Android GATT APIs depend on adapter, daemon, permissions and OEM policy",
+      "l2capOrClassic": "BlueZ sockets/LE CoC are host-specific and have no maintained adapter in this repository",
+      "nativeAdapterInRepository": false,
+      "physicalEvidence": false,
+      "decision": "bootstrap-only"
+    }
+  ],
+  "evidence": {
+    "inRepository": [
+      "packages/ble-bootstrap/src/adapters.ts exposes an injected adapter contract and createUnavailableAdapter",
+      "packages/ble-bootstrap/src/fragmentation.ts implements bounded SHA-256 checked bootstrap fragments",
+      "packages/ble-bootstrap/test/fragmentation.test.ts uses only an in-memory fake central/peripheral pair"
+    ],
+    "missingForTransportClaim": [
+      "native GATT adapter for every claimed role",
+      "measured throughput, latency, MTU, loss, reconnect and background behavior on physical devices",
+      "authenticated SA-002/SA-005 framed-stream conformance over the native adapter",
+      "route-policy cost and payload-size limits backed by the physical matrix"
+    ]
+  }
+}

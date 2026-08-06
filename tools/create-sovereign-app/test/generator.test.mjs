@@ -31,6 +31,7 @@ test('rejects unsafe names, paths and dependency/platform errors', () => {
   assert.throws(() => validateConfig({ name: 'web-only', platforms: 'web', modules: 'nextExample' }), /requires module webPresence/);
   assert.throws(() => validateConfig({ name: 'mobile', platforms: 'android', modules: 'qr,reactNative' }), /requires both/);
   assert.throws(() => validateConfig({ name: 'bad', platforms: 'desktop', modules: 'electron' }), /unsupported platform/);
+  assert.throws(() => validateConfig({ name: 'bt', platforms: 'android', modules: 'bluetoothTransport' }), /SA-015 no-go/);
 });
 
 test('generates, checks, and safely repeats into a temporary directory', async () => {

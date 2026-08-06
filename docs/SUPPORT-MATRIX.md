@@ -17,6 +17,12 @@ claim that the platform adapter is implemented.
 | Adapter conformance helpers | yes | in-memory tests only | `module-kernel/src/conformance.ts` |
 | LAN mDNS/DNS-SD | target contract | desktop advertise + iOS/Android browse (permission injected) | `protocol/src/lan-discovery.ts` |
 | QR / desktop Iroh / RN Iroh | target contracts | pending SA-003–SA-005 | backlog |
+| BLE bootstrap | contract | platform-neutral codec + in-memory adapter only | `packages/ble-bootstrap` |
+| Bluetooth framed data | explicitly not supported | no native adapter; no physical matrix | `docs/ADR-015-bluetooth-transport.md` |
 
 No row marked “implemented adapter” may be promoted to supported until a
 platform-specific agent supplies runtime evidence.
+
+Bluetooth data is intentionally absent from the supported-module set. Its
+verified payload limit is zero until [ADR-015](./ADR-015-bluetooth-transport.md)
+is reopened with physical evidence.
