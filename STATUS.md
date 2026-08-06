@@ -24,6 +24,9 @@ It is a useful architecture sketch but is not currently functional.
 - Web presence: current simulated landing is not the target. Planned output is
   an installable helper plus a minimal Next.js integration example.
 - Bluetooth: not present; BLE bootstrap and any data transport are separate tasks.
+- Web presence core: implemented in `packages/web-presence` with memory-only
+  development adapters and framework-neutral Next route factories; it is not a
+  marketing landing and is not yet a stable release.
 
 ### Why this matters
 

@@ -90,6 +90,12 @@ envelopes. Clients verify every record against the public key learned during
 pairing. The example shows integration and truthful diagnostics; it is not a
 marketing site and does not simulate connected peers.
 
+The implementation package is `@sovereign-apps/web-presence`. Its Next adapter
+exports route-handler factories (`createNextWebPresenceRoutes`,
+`createPresenceRoute`, `createSignalingRoute`, `createBootstrapRoute`) so an
+application can mount the same helper below any base path without adopting
+route aliases or a product landing page.
+
 ## Planned channel semantics
 
 | Channel | Role | Trust | External infrastructure |
