@@ -1,63 +1,36 @@
-/**
- * Sovereign App Template — React Native entry point.
- *
- * Minimal RN app that opens an Iroh endpoint, dials a peer Electron node,
- * exchanges framed JSON messages over QUIC streams.
- *
- * Uses @gordo-labs/react-native-iroh for the native Iroh bridge.
- * Falls back to a stub when the native module isn't available (dev/testing).
- */
+import type { TransportCandidate } from '@sovereign-apps/module-kernel';
+import { ReactNativeIrohEndpoint } from './transport-adapter.js';
 
-import type { IrohBridge } from './iroh-bridge.js';
-
-let bridge: IrohBridge | null = null;
-let peerNodeId: string | null = null;
+let endpoint: ReactNativeIrohEndpoint | null = null;
+let activeSession: Awaited<ReturnType<ReactNativeIrohEndpoint['connect']>> | null = null;
 let messageLog: string[] = [];
 
-export async function startSovereignPeer(nodeId: string): Promise<void> {
-  peerNodeId = nodeId;
-  const { getIrohBridge } = await import('./iroh-bridge.js');
-  bridge = getIrohBridge();
-
-  try {
-    await bridge.startEndpoint();
-    const myNodeId = bridge.getNodeId();
-    console.log('[sovereign-rn] Node id:', myNodeId);
-
-    // Dial the peer
-    const session = await bridge.dial(nodeId);
-    console.log('[sovereign-rn] Connected to:', nodeId);
-
-    // Send hello
-    const hello = JSON.stringify({
-      type: 'hello',
-      timestamp: new Date().toISOString(),
-      from: myNodeId,
-      payload: { message: 'mobile sovereign peer connected' },
-    });
-    await session.send(new TextEncoder().encode(hello));
-
-    // Listen for messages
-    session.onMessage((data: Uint8Array) => {
-      const text = new TextDecoder().decode(data);
-      console.log('[sovereign-rn] Received:', text);
-      messageLog.push(text);
-    });
-
-    session.onClose(() => {
-      console.log('[sovereign-rn] Disconnected');
-      bridge?.stopEndpoint();
-    });
-  } catch (err) {
-    console.error('[sovereign-rn] Error:', err);
-    bridge?.stopEndpoint();
-  }
+export async function startSovereignPeer(candidate: TransportCandidate, signal?: AbortSignal): Promise<void> {
+  endpoint ??= new ReactNativeIrohEndpoint();
+  await endpoint.start({ signal: signal ?? new AbortController().signal });
+  activeSession = await endpoint.connect(candidate, { signal });
+  const stream = await activeSession.openStream({ signal });
+  stream.read().then(async function drain(frame): Promise<void> {
+    if (!frame) return;
+    messageLog = [...messageLog, new TextDecoder().decode(frame)];
+    await drain(await stream.read());
+  }).catch(() => undefined);
+  await stream.write(new TextEncoder().encode(JSON.stringify({
+    type: 'hello', timestamp: new Date().toISOString(), payload: { message: 'mobile sovereign peer connected' },
+  })), { signal });
 }
 
-export function getMessageLog(): string[] {
-  return messageLog;
+export async function stopSovereignPeer(): Promise<void> {
+  await activeSession?.close('app teardown');
+  activeSession = null;
+  await endpoint?.stop();
+  endpoint = null;
 }
 
-export function getNodeId(): string | null {
-  return bridge?.getNodeId() ?? null;
+export function getMessageLog(): string[] { return [...messageLog]; }
+export function clearMessageLog(): void { messageLog = []; }
+export async function getNodeId(): Promise<string | null> {
+  if (!endpoint) return null;
+  try { return (await endpoint.diagnostics()).nodeId || null; } catch { return null; }
 }
+export function getTransportEndpoint(): ReactNativeIrohEndpoint | null { return endpoint; }

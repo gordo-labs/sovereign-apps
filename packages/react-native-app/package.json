@@ -23,9 +23,10 @@
     "build:ios": "react-native build-ios",
     "start": "react-native start",
     "lint": "eslint .",
-    "test": "node -e \"console.log('SA-001: runtime tests are not implemented; see SA-006')\""
+    "test": "pnpm build && node --test test/*.test.mjs"
   },
   "dependencies": {
+    "@sovereign-apps/module-kernel": "workspace:*",
     "@sovereign-apps/protocol": "workspace:*",
     "react-native": "^0.81.0",
     "react": "^19.1.0",

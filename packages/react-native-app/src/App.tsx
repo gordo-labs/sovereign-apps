@@ -27,6 +27,7 @@ const QR_SCANNER_PLACEHOLDER = 'Enter desktop QR payload (JSON)';
 
 export function App(): React.JSX.Element {
   const [peerId, setPeerId] = useState('');
+  const [addressHint, setAddressHint] = useState('');
   const [connected, setConnected] = useState(false);
   const [nodeId, setNodeId] = useState<string | null>(null);
   const [messages, setMessages] = useState<string[]>([]);
@@ -59,7 +60,7 @@ export function App(): React.JSX.Element {
 
   // Poll for new messages
   useEffect(() => {
-    setNodeId(getNodeId());
+    void getNodeId().then(setNodeId);
     const interval = setInterval(() => {
       const log = getMessageLog();
       if (log.length > 0) {
@@ -98,9 +99,15 @@ export function App(): React.JSX.Element {
   // Connect to desktop via Iroh
   const handleConnect = useCallback(async () => {
     if (!peerId.trim()) return;
-    await startSovereignPeer(peerId.trim());
-    setConnected(true);
-  }, [peerId]);
+    if (!addressHint.trim()) return;
+    try {
+      await startSovereignPeer({ id: peerId.trim(), kind: 'iroh', address: addressHint.trim() });
+      setConnected(true);
+    } catch (error) {
+      setPairingLog((prev) => [...prev, `[connect-error] ${error instanceof Error ? error.message : String(error)}`]);
+      setConnected(false);
+    }
+  }, [peerId, addressHint]);
 
   return (
     <ScrollView style={styles.container}>
@@ -163,6 +170,12 @@ export function App(): React.JSX.Element {
               placeholder="Peer node id"
               value={peerId}
               onChangeText={setPeerId}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Dialable address or endpoint ticket (required)"
+              value={addressHint}
+              onChangeText={setAddressHint}
             />
             <Button title="Connect" onPress={handleConnect} />
           </View>
