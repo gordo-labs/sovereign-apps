@@ -34,7 +34,9 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "test": "pnpm build && node --test test/*.test.mjs"
+    "test": "pnpm build && node --test test/*.test.mjs",
+    "prepack": "node ../../scripts/rewrite-published-manifest.mjs",
+    "postpack": "node ../../scripts/restore-published-manifest.mjs"
   },
   "dependencies": {},
   "peerDependencies": {

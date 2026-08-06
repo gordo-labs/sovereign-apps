@@ -38,7 +38,9 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "pnpm build && node --test test/*.test.mjs",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepack": "node ../../scripts/rewrite-published-manifest.mjs",
+    "postpack": "node ../../scripts/restore-published-manifest.mjs"
   },
   "dependencies": {
     "@sovereign-apps/module-kernel": "workspace:*",

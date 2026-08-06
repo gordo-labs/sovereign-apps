@@ -25,7 +25,9 @@
     "build:ios": "react-native build-ios",
     "start": "react-native start",
     "lint": "eslint .",
-    "test": "pnpm build && node --test test/*.test.mjs"
+    "test": "pnpm build && node --test test/*.test.mjs",
+    "prepack": "node ../../scripts/rewrite-published-manifest.mjs",
+    "postpack": "node ../../scripts/restore-published-manifest.mjs"
   },
   "dependencies": {
     "@sovereign-apps/module-kernel": "workspace:*",

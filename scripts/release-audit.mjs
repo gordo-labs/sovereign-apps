@@ -31,7 +31,20 @@ async function pack(name, destination) {
   const { stdout } = await run('pnpm', ['pack', '--json', '--pack-destination', destination], {
     cwd,
   });
-  const parsed = JSON.parse(stdout.trim());
+  // pnpm prints npm lifecycle banners before its JSON result. Parse the first
+  // complete JSON document instead of assuming stdout is JSON-only.
+  let parsed;
+  const lines = stdout.split('\n');
+  for (let index = 0; index < lines.length; index += 1) {
+    if (!/^[\[{]/.test(lines[index].trim())) continue;
+    try {
+      parsed = JSON.parse(lines.slice(index).join('\n').trim());
+      break;
+    } catch {
+      // A nested object is not a candidate; continue at the next line.
+    }
+  }
+  if (!parsed) throw new Error(`pnpm pack did not return JSON for ${name}`);
   return parsed[0] ?? parsed;
 }
 

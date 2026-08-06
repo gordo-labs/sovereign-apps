@@ -45,4 +45,5 @@ run('pnpm', ['build'], 'workspace build');
 // independent and does not write tarballs, so use it per publishable package.
 for (const dir of releaseDirs)
   run('npm', ['pack', '--dry-run', '--ignore-scripts', '--json'], `package dry-run (${dir})`, dir);
+run('pnpm', ['release:install-test'], 'external package install test');
 console.log(`release gates passed: ${packageJsons.length} workspace manifests checked`);
