@@ -41,6 +41,28 @@ test('pairing input rejects tampering, downgrade, oversized and expired envelope
   assert.throws(() => parsePairingInput('x'.repeat(5000)), /oversized/);
 });
 
+test('pairing input accepts custom-scheme and web deep links', () => {
+  const envelope = buildPairingQrEnvelope({
+    protocol: 'sovereign-apps/1',
+    alpn: 'sovereign-apps/1',
+    hubId: 'desktop-app',
+    nodeId: 'desktop-node',
+    desktopPublicKey: 'desktop-key',
+    sessionRef: 'A'.repeat(32),
+    expiresAt: new Date(Date.now() + 60_000).toISOString(),
+  });
+  const encoded = Buffer.from(JSON.stringify(envelope)).toString('base64url');
+  assert.equal(parsePairingInput(`sovereign://pair?data=${encoded}`).hubId, 'desktop-app');
+  assert.equal(
+    parsePairingInput(`https://example.test/pair?data=${encoded}`).nodeId,
+    'desktop-node',
+  );
+  assert.equal(
+    parsePairingInput(`https://example.test/pairing?data=${encoded}`).nodeId,
+    'desktop-node',
+  );
+});
+
 test('pairing session is one-time and rate/concurrency bounded', () => {
   const store = new PairingSessionStore(1, 1);
   const session = store.create();

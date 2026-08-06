@@ -37,7 +37,8 @@
     "@gordo-labs/react-native-iroh": "^0.2.0"
   },
   "peerDependencies": {
-    "@gordo-labs/react-native-iroh": "^0.2.0"
+    "@gordo-labs/react-native-iroh": "^0.2.0",
+    "react-native-camera-kit": ">=15.0.0"
   },
   "devDependencies": {
     "typescript": "^5.6",

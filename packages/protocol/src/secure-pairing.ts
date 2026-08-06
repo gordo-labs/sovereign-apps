@@ -119,11 +119,22 @@ export function parsePairingInput(
   if (!text || Buffer.byteLength(text, 'utf8') > MAX_PAIRING_INPUT_BYTES)
     throw new Error('Pairing input is empty or oversized');
   let payload = text;
-  if (text.startsWith('sovereign://pair?')) {
-    const encoded = new URL(text).searchParams.get('data');
-    if (!encoded) throw new Error('Pairing deep link is missing data');
-    payload = Buffer.from(encoded, 'base64url').toString('utf8');
-  } else if (!options.allowManual && !text.startsWith('{')) {
+  let isLink = false;
+  try {
+    const url = new URL(text);
+    isLink =
+      (url.protocol === 'sovereign:' && url.hostname === 'pair') ||
+      ((url.protocol === 'https:' || url.protocol === 'http:') &&
+        ['/pair', '/pairing'].includes(url.pathname));
+    if (isLink) {
+      const encoded = url.searchParams.get('data');
+      if (!encoded) throw new Error('Pairing link is missing data');
+      payload = Buffer.from(encoded, 'base64url').toString('utf8');
+    }
+  } catch (error) {
+    if (isLink) throw error;
+  }
+  if (!isLink && !options.allowManual && !text.startsWith('{')) {
     throw new Error('Manual pairing input is disabled');
   }
   if (Buffer.byteLength(payload, 'utf8') > 2048)
