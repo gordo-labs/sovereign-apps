@@ -11,13 +11,18 @@ It is a useful architecture sketch but is not currently functional.
 - Initial commit: `6c49f8b` (`chore: publish pre-alpha open-source baseline`).
 - Initial CI: red because pnpm is not pinned; this is the first SA-001 gate.
 - Version: `0.0.1`, pre-alpha; no stable release or tag.
-- Standard install: fails because `@gordo-labs/react-native-iroh` is absent from npm.
+- npm bridge: `@gordo-labs/react-native-iroh@0.2.0` is public and resolves with
+  `latest=0.2.0`; the former registry blocker is closed.
+- Standard install: still not reproducibly certified because pnpm/lockfile are
+  unpinned and first-party React/RN peers require alignment.
 - Build/typecheck: fail in `@sovereign-apps/protocol`.
 - Tests: command succeeds with zero tests.
-- Lint: fails because the landing linter launches interactive setup.
+- Lint: fails because the current prototype web app launches interactive setup.
 - Desktop/mobile pairing: not end-to-end wired or verified.
 - Wi-Fi module: serialization helpers only; no advertiser or browser runtime.
-- Bluetooth: not present.
+- Web presence: current simulated landing is not the target. Planned output is
+  an installable helper plus a minimal Next.js integration example.
+- Bluetooth: not present; BLE bootstrap and any data transport are separate tasks.
 
 ### Why this matters
 
@@ -27,8 +32,9 @@ adding further communication modules.
 
 ### Next work
 
-Follow [working/BACKLOG.md](./working/BACKLOG.md), beginning with `SA-001` through
-`SA-006`. Every task has an atomic prompt under `working/prompts/`.
+Follow [working/BACKLOG.md](./working/BACKLOG.md), beginning with source-freeze
+task `SA-000`, then `SA-001` through `SA-006`. Every task has an atomic prompt
+under `working/prompts/`; `ORCHESTRATOR.txt` contains the merge order.
 
 Initial CI evidence:
 <https://github.com/gordo-labs/sovereign-apps/actions/runs/31096384990>.
