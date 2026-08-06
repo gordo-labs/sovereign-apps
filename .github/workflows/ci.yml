@@ -20,7 +20,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        gate: [format, lint, typecheck, test, contract-e2e, build, package-dry-run]
+        gate:
+          [format, lint, typecheck, test, contract-e2e, build, package-audit, package-install-test]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -51,8 +52,11 @@ jobs:
         if: matrix.gate == 'build'
         run: pnpm build
       - name: Package audit/dry-run
-        if: matrix.gate == 'package-dry-run'
+        if: matrix.gate == 'package-audit'
         run: pnpm release:audit
+      - name: External package install test
+        if: matrix.gate == 'package-install-test'
+        run: pnpm release:install-test
 
   stable-block:
     name: Stable is blocked until every gate and physical evidence pass

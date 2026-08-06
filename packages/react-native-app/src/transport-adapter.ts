@@ -4,12 +4,16 @@ import type {
   TransportEndpoint,
   TransportSession,
 } from '@sovereign-apps/module-kernel';
+import {
+  DEFAULT_ALPN as PROTOCOL_DEFAULT_ALPN,
+  negotiateStreamHello,
+} from '@sovereign-apps/protocol';
 import type { BridgeLike, IrohBridgeConnection, IrohBridgeSession } from './iroh-bridge.js';
 import { getIrohBridge, bridgeDiagnostics } from './iroh-bridge.js';
 
 export const RN_IROH_MODULE_ID = 'transport.iroh.react-native';
 export const RN_IROH_VERSION = '0.2.0';
-export const DEFAULT_ALPN = 'sovereign-apps/1';
+export const DEFAULT_ALPN = PROTOCOL_DEFAULT_ALPN;
 export const MAX_FRAME_BYTES = 2 * 1024 * 1024;
 
 export type ReactNativeTransportState =
@@ -175,6 +179,29 @@ class NativeFramedStream implements FramedStream {
     this.unsubscribe.push(connection.onError(() => this.closeSilently()));
   }
 
+  static async open(connection: IrohBridgeConnection, alpn: string): Promise<NativeFramedStream> {
+    const stream = new NativeFramedStream(connection);
+    try {
+      await negotiateStreamHello(
+        {
+          read: () => stream.readRaw(),
+          write: (data) => connection.send(data),
+        },
+        { alpn },
+      );
+      return stream;
+    } catch (error) {
+      await stream.close().catch(() => undefined);
+      throw error;
+    }
+  }
+
+  private async readRaw(): Promise<Uint8Array | null> {
+    if (this.frames.length) return this.frames.shift()!;
+    if (this.closed) return null;
+    return new Promise<Uint8Array | null>((resolve) => this.waiters.push(resolve));
+  }
+
   async read(options: { signal?: AbortSignal } = {}): Promise<Uint8Array | null> {
     if (this.frames.length) return this.frames.shift()!;
     if (this.closed) return null;
@@ -219,9 +246,23 @@ class NativeTransportSession implements TransportSession {
   async openStream(options: { signal?: AbortSignal } = {}): Promise<FramedStream> {
     if (this.closed) throw new ReactNativeTransportError('CLOSED', 'Session is closed');
     const connection = await raceAbort(this.session.openStream(), options.signal, 30_000);
-    const stream = new NativeFramedStream(connection);
-    this.streams.add(stream);
-    return stream;
+    const stream = await NativeFramedStream.open(connection, DEFAULT_ALPN);
+    try {
+      await negotiateStreamHello(
+        {
+          read: () => stream.read(options),
+          write: (data) => stream.write(data, options),
+        },
+        { alpn: DEFAULT_ALPN },
+      );
+      this.streams.add(stream);
+      return stream;
+    } catch (error) {
+      await stream.close().catch(() => undefined);
+      throw new ReactNativeTransportError('ALPN_MISMATCH', 'Peer stream hello was rejected', {
+        cause: error,
+      });
+    }
   }
   async close(reason?: string): Promise<void> {
     if (this.closed) return;

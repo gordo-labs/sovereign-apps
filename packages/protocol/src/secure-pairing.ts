@@ -1,5 +1,5 @@
 import { canonicalJson } from './schemas.js';
-import type { PeerCapability } from './pairing.js';
+import { PeerCapabilities, type PeerCapability } from './pairing.js';
 
 /** Domain separator for the only signature transcript accepted by the template. */
 export const PAIRING_TRANSCRIPT_DOMAIN = 'sovereign-apps/pairing-transcript/v1';
@@ -27,13 +27,22 @@ export type PairingTranscript = {
   domain: typeof PAIRING_TRANSCRIPT_DOMAIN;
   protocol: string;
   alpn: string;
+  sessionRef: string;
   desktopPublicKey: string;
   desktopNodeId: string;
   mobilePublicKey: string;
+  mobileNodeId: string;
   nonce: string;
   expiresAt: string;
   requested: PairingCapabilities;
   granted: PairingCapabilities;
+};
+
+/** Proof returned by the mobile side after the user confirms the QR identity. */
+export type SecurePairingProof = {
+  sessionRef: string;
+  transcript: Omit<PairingTranscript, 'domain'>;
+  signature: string;
 };
 
 export type PairingGrant = {
@@ -174,6 +183,43 @@ export async function transcriptDigest(input: Omit<PairingTranscript, 'domain'>)
   return b64url(new Uint8Array(digest));
 }
 
+export function validatePairingTranscript(
+  transcript: Omit<PairingTranscript, 'domain'>,
+  now = Date.now(),
+): void {
+  if (!transcript.sessionRef || !/^[A-Za-z0-9_-]{32}$/.test(transcript.sessionRef))
+    throw new Error('Invalid pairing transcript session reference');
+  if (transcript.protocol !== 'sovereign-apps/1')
+    throw new Error('Unsupported pairing transcript protocol');
+  if (!transcript.alpn || transcript.alpn.length > 128)
+    throw new Error('Invalid pairing transcript ALPN');
+  for (const [name, value] of [
+    ['desktopPublicKey', transcript.desktopPublicKey],
+    ['desktopNodeId', transcript.desktopNodeId],
+    ['mobilePublicKey', transcript.mobilePublicKey],
+    ['mobileNodeId', transcript.mobileNodeId],
+  ] as const) {
+    if (!value || value.length > 512) throw new Error(`Invalid pairing transcript ${name}`);
+  }
+  const expires = Date.parse(transcript.expiresAt);
+  if (!Number.isFinite(expires) || expires <= now) throw new Error('Pairing transcript expired');
+  if (
+    typeof transcript.nonce !== 'string' ||
+    transcript.nonce.length < 1 ||
+    transcript.nonce.length > 256
+  )
+    throw new Error('Invalid pairing transcript nonce');
+  if (!Array.isArray(transcript.requested) || !Array.isArray(transcript.granted))
+    throw new Error('Invalid pairing transcript capabilities');
+  const known = new Set(Object.values(PeerCapabilities));
+  if (
+    [...transcript.requested, ...transcript.granted].some(
+      (capability) => typeof capability !== 'string' || !known.has(capability as PeerCapability),
+    )
+  )
+    throw new Error('Unknown pairing transcript capability');
+}
+
 export type SignatureVerifier = (
   signature: Uint8Array,
   message: Uint8Array,
@@ -186,6 +232,7 @@ export function verifyTranscript(
   verify: SignatureVerifier,
 ): boolean {
   try {
+    validatePairingTranscript(transcript);
     return verify(decode(signature), buildPairingTranscript(transcript), decode(publicKey));
   } catch {
     return false;
@@ -221,6 +268,10 @@ export class PairingSessionStore {
     if (++session.attempts > this.maxAttempts) throw new Error('Pairing rate limit exceeded');
     session.consumed = true;
     return { ...session };
+  }
+  get(ref: string): PairingSession | undefined {
+    const session = this.sessions.get(ref);
+    return session ? { ...session } : undefined;
   }
   revoke(ref: string): void {
     this.sessions.delete(ref);

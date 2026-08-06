@@ -1,14 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { encodeStreamHello } from '../../protocol/dist/index.js';
 import { normalizeCandidate, ReactNativeIrohEndpoint } from '../dist/transport-adapter.js';
 
-const fakeConnection = () => {
+const fakeConnection = (responseAlpn = null) => {
   const messages = new Set();
   const closes = new Set();
   const errors = new Set();
   return {
     send: async (data) => {
       if (!data.length) throw new Error('empty');
+      // The fake peer mirrors the application hello; real peers validate the
+      // same framed version/domain before exposing application messages.
+      if (data.length >= 9 && data[4] === 0x53 && data[5] === 0x41 && data[6] === 0x48) {
+        const response = responseAlpn ? encodeStreamHello(responseAlpn) : new Uint8Array(data);
+        for (const fn of messages) fn(response);
+      }
     },
     onMessage: (fn) => (messages.add(fn), () => messages.delete(fn)),
     onClose: (fn) => (closes.add(fn), () => closes.delete(fn)),
@@ -23,8 +30,8 @@ const fakeConnection = () => {
   };
 };
 
-function fakeBridge() {
-  const connection = fakeConnection();
+function fakeBridge(responseAlpn = null) {
+  const connection = fakeConnection(responseAlpn);
   const session = {
     openStream: async () => connection,
     isClosed: () => false,
@@ -105,4 +112,12 @@ test('native unavailable does not become ready', async () => {
   const endpoint = new ReactNativeIrohEndpoint({ bridge });
   await assert.rejects(endpoint.start({ signal: new AbortController().signal }), /failed to start/);
   assert.equal(endpoint.state, 'failed');
+});
+
+test('stream hello rejects a peer advertising a different application domain', async () => {
+  const bridge = fakeBridge('other-app/1');
+  const endpoint = new ReactNativeIrohEndpoint({ bridge });
+  await endpoint.start({ signal: new AbortController().signal });
+  const session = await endpoint.connect({ id: 'peer', kind: 'iroh', address: '203.0.113.2:4433' });
+  await assert.rejects(() => session.openStream(), /mismatch/);
 });

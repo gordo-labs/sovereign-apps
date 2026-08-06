@@ -5,6 +5,8 @@ import {
   FrameDecoder,
   encodeFrame,
   MAX_FRAME_BYTES,
+  encodeStreamHello,
+  negotiateStreamHello,
   type IrohDialOptions,
 } from '@sovereign-apps/protocol';
 
@@ -94,13 +96,17 @@ export class ElectronIrohNode implements IrohNode {
 
   static async create(options: CreateIrohNodeOptions): Promise<ElectronIrohNode> {
     if (options.key.byteLength !== 32) throw new Error('Iroh secret key must be exactly 32 bytes');
+    const alpn = options.alpn ?? DEFAULT_ALPN;
+    // @momics/iroh-http-node 0.6.x has no configurable ALPN. Validate the
+    // application domain now; the same value is negotiated on every stream.
+    encodeStreamHello(alpn);
     try {
       const factory = options.nativeFactory ?? ((config) => createNode(config));
       const native = await factory({
         key: options.key.slice(),
         relay: { mode: options.relayMode ?? 'default' },
       });
-      const adapter = new ElectronIrohNode(native, options.alpn ?? DEFAULT_ALPN, options);
+      const adapter = new ElectronIrohNode(native, alpn, options);
       await adapter.refreshAddressInfo();
       adapter.state = 'ready';
       return adapter;
@@ -144,11 +150,14 @@ export class ElectronIrohNode implements IrohNode {
             session.close({ closeCode: 429, reason: 'session limit reached' });
             continue;
           }
-          const connection = await FramedIrohConnection.open(
-            session,
-            this.maxFrameBytes,
-            this.alpn,
-          );
+          let connection: FramedIrohConnection;
+          try {
+            connection = await FramedIrohConnection.open(session, this.maxFrameBytes, this.alpn);
+          } catch (error) {
+            session.close({ closeCode: 400, reason: 'stream hello mismatch' });
+            this.lastError = error instanceof Error ? error.message : String(error);
+            continue;
+          }
           this.sessions.add(connection);
           connection.onClose(() => this.sessions.delete(connection));
           try {
@@ -196,7 +205,11 @@ export class ElectronIrohNode implements IrohNode {
       }
       return {
         remoteId: session.remoteId.toString(),
-        createBidirectionalStream: () => session.createBidirectionalStream(),
+        createBidirectionalStream: async () => {
+          const stream = await session.createBidirectionalStream();
+          await negotiateWebStream(stream, this.alpn);
+          return stream;
+        },
         close: (info?: { closeCode: number; reason: string }) => session.close(info),
       };
     } finally {
@@ -237,13 +250,14 @@ class FramedIrohConnection implements IrohDuplexConnection {
     private readonly session: NativeSession,
     maxFrameBytes: number,
     _alpn: string,
-    stream: { readable: ReadableStream<Uint8Array>; writable: WritableStream<Uint8Array> },
+    reader: ReadableStreamDefaultReader<Uint8Array>,
+    writer: WritableStreamDefaultWriter<Uint8Array>,
   ) {
     this.peerId = session.remoteId.toString();
     this.decoder = new FrameDecoder({ maxFrameBytes });
     this.maxFrameBytes = maxFrameBytes;
-    this.reader = stream.readable.getReader();
-    this.writer = stream.writable.getWriter();
+    this.reader = reader;
+    this.writer = writer;
     void this.readLoop();
     void session.closed
       .then(() => this.markClosed())
@@ -256,12 +270,25 @@ class FramedIrohConnection implements IrohDuplexConnection {
     alpn: string,
   ): Promise<FramedIrohConnection> {
     await session.ready;
-    return new FramedIrohConnection(
-      session,
-      maxFrameBytes,
-      alpn,
-      await session.createBidirectionalStream(),
-    );
+    const stream = await session.createBidirectionalStream();
+    const reader = stream.readable.getReader();
+    const writer = stream.writable.getWriter();
+    try {
+      await negotiateStreamHello(
+        {
+          read: async () => {
+            const result = await reader.read();
+            return result.done ? null : result.value;
+          },
+          write: (data) => writer.write(data),
+        },
+        { alpn },
+      );
+    } finally {
+      // The framed connection owns these locks after negotiation. Releasing
+      // them here would make the returned readers unusable.
+    }
+    return new FramedIrohConnection(session, maxFrameBytes, alpn, reader, writer);
   }
 
   send(data: Uint8Array): Promise<void> {
@@ -312,6 +339,29 @@ class FramedIrohConnection implements IrohDuplexConnection {
     for (const handler of this.closeHandlers) handler(error);
     this.handlers.clear();
     this.closeHandlers.clear();
+  }
+}
+
+async function negotiateWebStream(
+  stream: { readable: ReadableStream<Uint8Array>; writable: WritableStream<Uint8Array> },
+  alpn: string,
+): Promise<void> {
+  const reader = stream.readable.getReader();
+  const writer = stream.writable.getWriter();
+  try {
+    await negotiateStreamHello(
+      {
+        read: async () => {
+          const result = await reader.read();
+          return result.done ? null : result.value;
+        },
+        write: (data) => writer.write(data),
+      },
+      { alpn },
+    );
+  } finally {
+    reader.releaseLock();
+    writer.releaseLock();
   }
 }
 
