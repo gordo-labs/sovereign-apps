@@ -30,6 +30,7 @@ import {
   LAN_SCAN_TIMEOUT_MS,
   buildLanAdvertisement,
   parseLanAdvertisement,
+  parsePairingInput,
 } from '@sovereign-apps/protocol';
 
 export type PairingState =
@@ -84,14 +85,21 @@ export class MobilePairingClient {
    * Handle a scanned QR payload.
    * Sets state to 'qr_scanned', emits the event.
    */
-  handleQrScan(qrData: string): {
+  handleQrScan(qrData: string, options: { allowManual?: boolean } = {}): {
     hubId: string;
     nodeId: string;
     fingerprint: string;
     bootstrap: string | null;
   } | { error: string } {
     try {
-      const parsed = HubPairing.parseQrPayload(qrData);
+      const secure = parsePairingInput(qrData, options);
+      const parsed = {
+        hubId: secure.hubId,
+        nodeId: secure.nodeId,
+        publicKey: secure.desktopPublicKey,
+        bootstrap: secure.bootstrap ?? null,
+        directAddrs: [],
+      };
       const fingerprint = HubPairing.fingerprint(parsed.nodeId);
       this.state = 'qr_scanned';
       this.emit({
@@ -112,6 +120,9 @@ export class MobilePairingClient {
       return { error: msg };
     }
   }
+
+  /** Diagnostic-only fallback; production UI must use camera/deep-link input. */
+  handleManualDiagnosticInput(qrData: string) { return this.handleQrScan(qrData, { allowManual: true }); }
 
   /**
    * User has verified the fingerprint matches the desktop screen.

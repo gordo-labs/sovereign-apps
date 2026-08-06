@@ -11,3 +11,4 @@ export * from './pairing.js';
 export * from './auth.js';
 export * from './wifi-direct.js';
 export * from './hub-pairing.js';
+export * from './secure-pairing.js';

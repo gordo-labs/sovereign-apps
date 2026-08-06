@@ -34,3 +34,4 @@ export async function getNodeId(): Promise<string | null> {
   try { return (await endpoint.diagnostics()).nodeId || null; } catch { return null; }
 }
 export function getTransportEndpoint(): ReactNativeIrohEndpoint | null { return endpoint; }
+export * from './secure-store.js';

@@ -11,21 +11,21 @@
  * para establecer conexion via wifi inicial"
  */
 
-import type { PairingQrPayload } from '@sovereign-apps/protocol';
+import type { PairingQrPayload, SecurePairingQrEnvelope } from '@sovereign-apps/protocol';
 import { qrCodeToHtml, generateQrCode } from './qr-generator.js';
 
 import { BrowserWindow, app } from 'electron';
 
 /** Build the complete pairing UI HTML. */
-export function buildPairingHtml(params: {
+export async function buildPairingHtml(params: {
   nodeId: string;
   peerId: string;
-  qrPayload: PairingQrPayload;
+  qrPayload: PairingQrPayload | SecurePairingQrEnvelope;
   fingerprint: string;
   advertisePort: number;
-}): string {
+}): Promise<string> {
   const qrText = JSON.stringify(params.qrPayload);
-  const qr = generateQrCode(qrText);
+  const qr = await generateQrCode(qrText);
   const qrHtml = qrCodeToHtml(qr, 'Scan to pair');
 
   return `<!DOCTYPE html>
@@ -122,14 +122,14 @@ export function buildPairingHtml(params: {
 <div class="header">
   <h1>Sovereign App — Pairing</h1>
   <p>Desktop peer ready for initial WiFi connection</p>
-  <div class="node-id">Node: <span id="nodeIdDisplay">${params.nodeId.slice(0, 16)}</span>…</div>
+  <div class="node-id">Node: <span id="nodeIdDisplay">${escapeHtml(params.nodeId.slice(0, 16))}</span>…</div>
 </div>
 
 <div class="qr-section">
   ${qrHtml}
 </div>
 
-<div class="fingerprint">FP: ${params.fingerprint}</div>
+<div class="fingerprint">FP: ${escapeHtml(params.fingerprint)}</div>
 
 <div class="instructions">
   <h3>Initial WiFi Setup</h3>
@@ -143,7 +143,7 @@ export function buildPairingHtml(params: {
 </div>
 
 <div class="lan-info">
-  LAN advertisement on port ${params.advertisePort}
+  LAN advertisement on port ${escapeHtml(String(params.advertisePort))}
   · Direct connection via WiFi
 </div>
 
@@ -174,9 +174,9 @@ export function buildPairingHtml(params: {
 <div id="pairing-json">${escapeHtml(qrText)}</div>
 
 <script>
-  const nodeId = '${params.nodeId}';
-  const peerId = '${params.peerId}';
-  const fingerprint = '${params.fingerprint}';
+  const nodeId = ${JSON.stringify(params.nodeId)};
+  const peerId = ${JSON.stringify(params.peerId)};
+  const fingerprint = ${JSON.stringify(params.fingerprint)};
 
   /** Append a log entry to the event log. */
   function appendLog(text) {
@@ -233,7 +233,7 @@ export function buildPairingHtml(params: {
   };
 
   function escapeHtml(str) {
-    return String(str).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"');
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 </script>
 </body>
@@ -243,10 +243,11 @@ export function buildPairingHtml(params: {
 /** Quick HTML escape for embedding strings. */
 function escapeHtml(s: string): string {
   return s
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/"/g, '"')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
     .replace(/\$/g, '&#36;');
 }
 
@@ -279,7 +280,7 @@ export async function createPairingWindow(params: {
     },
   });
 
-  const html = buildPairingHtml(params);
+  const html = await buildPairingHtml(params);
   win.loadURL(`data:text/html;base64,${Buffer.from(html).toString('base64')}`);
 
   return {

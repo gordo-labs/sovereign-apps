@@ -26,6 +26,7 @@ import type {
   PairingSessionState,
 } from './pairing.js';
 import { PeerCapabilities } from './pairing.js';
+import { secureRandom } from './secure-pairing.js';
 
 /** Default capability set granted to a newly paired mobile peer. */
 const DEFAULT_GRANTED: PeerCapability[] = [
@@ -36,17 +37,7 @@ const DEFAULT_GRANTED: PeerCapability[] = [
 
 /** Generate a 16-byte random nonce for challenge. */
 export function generateNonce(): string {
-  const buf = new Uint8Array(16);
-  // Works in both browser (crypto.getRandomValues) and Node.js
-  // (global crypto in Node 22+ which this project targets)
-  if (typeof globalThis !== 'undefined' && typeof globalThis.crypto?.getRandomValues === 'function') {
-    globalThis.crypto.getRandomValues(buf);
-  } else {
-    // Fallback — Math.random based for environments without any crypto
-    for (let i = 0; i < 16; i++) {
-      buf[i] = Math.floor(Math.random() * 256);
-    }
-  }
+  const buf = secureRandom(16);
   return uint8ToBase64Url(buf);
 }
 

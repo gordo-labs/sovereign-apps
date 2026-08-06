@@ -8,6 +8,18 @@
     ".": {
       "types": "./dist/main.d.ts",
       "import": "./dist/main.js"
+    },
+    "./transport": {
+      "types": "./dist/iroh-node.d.ts",
+      "import": "./dist/iroh-node.js"
+    },
+    "./identity": {
+      "types": "./dist/node-key.d.ts",
+      "import": "./dist/node-key.js"
+    },
+    "./pairing": {
+      "types": "./dist/secure-pairing.d.ts",
+      "import": "./dist/secure-pairing.js"
     }
   },
   "files": [
@@ -26,13 +38,15 @@
     "test": "pnpm build && node --test test/*.test.ts"
   },
   "dependencies": {
+    "@momics/iroh-http-node": "^0.6.1",
     "@sovereign-apps/protocol": "workspace:*",
-    "@momics/iroh-http-node": "^0.6.1"
+    "@types/qrcode": "^1.5.5",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
-    "typescript": "^5.6",
     "electron": "^34",
-    "electron-builder": "^25"
+    "electron-builder": "^25",
+    "typescript": "^5.6"
   },
   "optionalDependencies": {
     "@momics/iroh-http-node-darwin-arm64": "0.6.1",
