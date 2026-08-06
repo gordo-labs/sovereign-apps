@@ -85,22 +85,34 @@ export async function negotiateStreamHello(
   options: { alpn: string; timeoutMs?: number },
 ): Promise<void> {
   assertAlpn(options.alpn);
-  await io.write(encodeStreamHello(options.alpn));
+  // Start the write without waiting for its backpressure promise. QUIC stream
+  // implementations may only resolve a write once the peer reads; both sides
+  // must therefore be able to enter the read phase concurrently.
+  const writePromise = io.write(encodeStreamHello(options.alpn));
   const decoder = new FrameDecoder({
     maxFrameBytes: STREAM_HELLO_HEADER_BYTES + STREAM_HELLO_MAX_ALPN_BYTES,
   });
-  let payload: Uint8Array | undefined;
-  while (!payload) {
-    const chunk = await withTimeout(io.read(), options.timeoutMs ?? STREAM_HELLO_TIMEOUT_MS);
-    if (chunk === null) throw new Error('Peer closed before stream hello');
-    const frames = decoder.push(chunk);
-    if (frames.length > 1) throw new Error('Peer sent application data before stream hello');
-    if (frames.length === 1) payload = frames[0];
+  try {
+    let payload: Uint8Array | undefined;
+    while (!payload) {
+      const chunk = await withTimeout(io.read(), options.timeoutMs ?? STREAM_HELLO_TIMEOUT_MS);
+      if (chunk === null) throw new Error('Peer closed before stream hello');
+      const frames = decoder.push(chunk);
+      if (frames.length > 1) throw new Error('Peer sent application data before stream hello');
+      if (frames.length === 1) payload = frames[0];
+    }
+    decoder.finish();
+    const hello = decodeStreamHello(payload);
+    if (hello.version !== STREAM_HELLO_VERSION || hello.alpn !== options.alpn)
+      throw new Error(
+        `Stream hello mismatch: expected ${options.alpn}, received ${hello.alpn} (v${hello.version})`,
+      );
+    await withTimeout(writePromise, options.timeoutMs ?? STREAM_HELLO_TIMEOUT_MS);
+  } catch (error) {
+    // Do not wait for a backpressured write after the read side has timed out
+    // or rejected; callers will close the stream. Attach a handler so a late
+    // native rejection cannot become an unhandled promise.
+    void writePromise.catch(() => undefined);
+    throw error;
   }
-  decoder.finish();
-  const hello = decodeStreamHello(payload);
-  if (hello.version !== STREAM_HELLO_VERSION || hello.alpn !== options.alpn)
-    throw new Error(
-      `Stream hello mismatch: expected ${options.alpn}, received ${hello.alpn} (v${hello.version})`,
-    );
 }
