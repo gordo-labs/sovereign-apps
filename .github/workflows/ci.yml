@@ -49,9 +49,9 @@ jobs:
       - name: Build
         if: matrix.gate == 'build'
         run: pnpm build
-      - name: Package dry-run
+      - name: Package audit/dry-run
         if: matrix.gate == 'package-dry-run'
-        run: pnpm -r --if-present pack --dry-run
+        run: pnpm release:audit
 
   stable-block:
     name: Stable is blocked until every gate and physical evidence pass

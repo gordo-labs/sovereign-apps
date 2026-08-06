@@ -13,12 +13,13 @@ before a stable release claim.
 - Current integration branch: `codex/stabilize-sovereign-apps`; public remote is
   <https://github.com/gordo-labs/sovereign-apps>.
 - Frozen install and task discovery are pinned to Node 22/pnpm 9.15.9. The
-  current host is Node 26, so a clean Node 22 run remains a release check.
+  complete release gate has now also passed on Node 22.22.3.
 - Version: `0.0.1`, pre-alpha; no stable release or tag.
 - npm bridge: `@gordo-labs/react-native-iroh@0.2.0` is public and resolves with
   `latest=0.2.0`; the former registry blocker is closed.
 - Standard install, format, lint, typecheck, build, workspace tests, contract
-  E2E, release audit and package dry-run all pass on the current host.
+  E2E, release audit and package dry-run all pass under Node 22 (and were also
+  smoke-checked on the host Node 26).
 - The protocol, module kernel, desktop Iroh adapter, React Native adapter,
   secure pairing, LAN discovery, route policy, web presence and generator are
   implemented and covered by non-empty tests.

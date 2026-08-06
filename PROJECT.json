@@ -11,7 +11,7 @@
   "nextNeeds": [
     "Physical iOS/Android QR-to-auth-to-reconnect/revoke evidence",
     "Native BLE and platform mDNS permission/runtime adapters",
-    "Clean Node 22 verification, signed support manifest, then stable release decision"
+    "Signed support manifest from physical iOS/Android evidence, then stable release decision"
   ],
   "blocking": "Automated gates pass, but stable support is blocked by missing physical iOS/Android evidence, native BLE/mDNS runtime measurements, and the skipped real two-node Iroh fixture",
   "license": "MIT",
