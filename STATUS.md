@@ -24,7 +24,11 @@ It is a useful architecture sketch but is not currently functional.
 - Wi-Fi module: serialization helpers only; no advertiser or browser runtime.
 - Web presence: current simulated landing is not the target. Planned output is
   an installable helper plus a minimal Next.js integration example.
-- Bluetooth: not present; BLE bootstrap and any data transport are separate tasks.
+- BLE bootstrap: optional `@sovereign-apps/ble-bootstrap` now provides a bounded,
+  SHA-256 checked GATT fragment codec, timeout/cancellation session, honest
+  platform-adapter contracts and an in-memory central/peripheral test adapter.
+  Native CoreBluetooth/Android/desktop adapters and physical-device gates remain
+  pending; no BLE bulk-data or background-availability claim is made.
 - Web presence core: implemented in `packages/web-presence` with memory-only
   development adapters and framework-neutral Next route factories; it is not a
   marketing landing and is not yet a stable release.
