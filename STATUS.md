@@ -16,8 +16,8 @@ It is a useful architecture sketch but is not currently functional.
   `latest=0.2.0`; the former registry blocker is closed.
 - Standard install: lockfile and public bridge dependency are present; clean
   Node 22 verification remains the merge gate (local host is Node 26).
-- Build/typecheck: fail in `@sovereign-apps/protocol`.
-- Tests: command succeeds with zero tests.
+- Build/typecheck: `@sovereign-apps/protocol` passes after SA-002; full workspace remains gated by parallel tasks.
+- Protocol tests: five non-empty Node test groups pass, including fragmentation and hostile-input cases.
 - Lint: fails because the current prototype web app launches interactive setup.
 - Desktop/mobile pairing: not end-to-end wired or verified.
 - Wi-Fi module: serialization helpers only; no advertiser or browser runtime.

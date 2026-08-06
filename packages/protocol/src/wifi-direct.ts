@@ -17,6 +17,7 @@
  */
 
 import type { LanPeerAdvertisement } from './pairing.js';
+import { z } from 'zod';
 
 /** Default UDP port for LAN peer advertisements. */
 export const DEFAULT_LAN_PORT = 42069;
@@ -51,9 +52,17 @@ export function parseLanAdvertisement(data: Uint8Array): LanPeerAdvertisement | 
   }
   try {
     const json = new TextDecoder().decode(data.subarray(LAN_MAGIC.byteLength));
-    const parsed = JSON.parse(json);
-    if (!parsed.hubId || !parsed.nodeId || !parsed.addresses) return null;
-    return parsed as LanPeerAdvertisement;
+    const parsed: unknown = JSON.parse(json);
+    const result = z
+      .object({
+        hubId: z.string().min(1).max(128),
+        nodeId: z.string().min(1).max(128),
+        addresses: z.array(z.string().min(1).max(512)).min(1).max(16),
+        fingerprint: z.string().min(1).max(64),
+      })
+      .strict()
+      .safeParse(parsed);
+    return result.success ? (result.data as LanPeerAdvertisement) : null;
   } catch {
     return null;
   }

@@ -21,6 +21,7 @@ import type {
 } from './pairing.js';
 import { PAIRING_VERSION, PAIRING_KIND, PeerCapabilities } from './pairing.js';
 import { deriveFingerprint } from './wifi-direct.js';
+import { parsePairingQrPayload } from './schemas.js';
 import {
   buildChallenge,
   buildResponse,
@@ -82,11 +83,13 @@ export class HubPairing {
     bootstrap: string | null;
     directAddrs: string[];
   } {
-    const payload: PairingQrPayload =
-      typeof raw === 'string' ? JSON.parse(raw) : raw;
-    if (!payload || payload.kind !== PAIRING_KIND) {
-      throw new Error('Invalid sovereign pairing QR payload');
+    let decoded: unknown;
+    try {
+      decoded = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    } catch {
+      throw new Error('Invalid sovereign pairing QR JSON');
     }
+    const payload = parsePairingQrPayload(decoded) as PairingQrPayload;
     return {
       hubId: payload.hubId,
       nodeId: payload.nodeId,
