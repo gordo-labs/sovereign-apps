@@ -1,4 +1,6 @@
 node_modules/
+artifacts/release/
+*.tgz
 dist/
 .next/
 .build/

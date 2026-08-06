@@ -11,6 +11,10 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,cjs,json,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,cjs,json,yaml}\"",
     "tasks": "node scripts/list-workspace-tasks.mjs",
+    "release:audit": "node scripts/release-audit.mjs",
+    "release:pack": "node scripts/release-audit.mjs --pack",
+    "test:e2e": "pnpm build && node --test test/e2e/*.test.mjs",
+    "release:gates": "node scripts/release-gates.mjs",
     "lint": "pnpm -r --if-present --sort lint",
     "test": "pnpm -r --if-present --sort test",
     "typecheck": "pnpm -r --if-present --sort typecheck"
