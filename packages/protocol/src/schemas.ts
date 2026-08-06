@@ -179,6 +179,45 @@ export function parsePresenceRecord(value: unknown) {
   return result.data;
 }
 
+export type PresenceVerifyFailure = 'malformed' | 'forbidden_metadata' | 'expired' | 'ttl_too_long' | 'future' | 'replay' | 'bad_signature';
+export type PresenceVerifyResult = { ok: true; record: z.infer<typeof PresenceRecordSchema> } | { ok: false; code: PresenceVerifyFailure; message: string };
+export type PresenceSignatureVerifier = (canonicalPayload: Uint8Array, signature: string, trustedPublicKey: string) => boolean | Promise<boolean>;
+
+/** Deterministic JSON used by platform-specific Ed25519 implementations. */
+export function canonicalJson(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  return `{${Object.keys(value as Record<string, unknown>).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson((value as Record<string, unknown>)[key])}`).join(',')}}`;
+}
+
+export async function verifyPresenceRecord(
+  value: unknown,
+  trustedPublicKey: string,
+  verifySignature: PresenceSignatureVerifier,
+  options: { now?: number; maxClockSkewMs?: number; maxTtlMs?: number; lastAcceptedIssuedAt?: string } = {},
+): Promise<PresenceVerifyResult> {
+  let record: ReturnType<typeof parsePresenceRecord>;
+  try { record = parsePresenceRecord(value); }
+  catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { ok: false, code: message.includes('Forbidden') ? 'forbidden_metadata' : 'malformed', message };
+  }
+  const now = options.now ?? Date.now();
+  const skew = options.maxClockSkewMs ?? 30_000;
+  const maxTtl = options.maxTtlMs ?? 120_000;
+  const issued = Date.parse(record.issuedAt);
+  const expires = Date.parse(record.expiresAt);
+  if (now >= expires) return { ok: false, code: 'expired', message: 'Presence record has expired' };
+  if (expires - issued > maxTtl + skew) return { ok: false, code: 'ttl_too_long', message: 'Presence TTL exceeds maximum' };
+  if (issued > now + skew) return { ok: false, code: 'future', message: 'issuedAt exceeds allowed clock skew' };
+  if (options.lastAcceptedIssuedAt && issued <= Date.parse(options.lastAcceptedIssuedAt)) return { ok: false, code: 'replay', message: 'Presence record is not newer than last accepted' };
+  const { signature: _signature, ...unsigned } = record;
+  let valid = false;
+  try { valid = await verifySignature(new TextEncoder().encode(canonicalJson(unsigned)), record.signature, trustedPublicKey); }
+  catch { valid = false; }
+  return valid ? { ok: true, record } : { ok: false, code: 'bad_signature', message: 'Presence signature verification failed' };
+}
+
 export function parseAuthObject(value: unknown) {
   for (const schema of [AuthChallengeSchema, AuthResponseSchema, AuthGrantSchema]) {
     const result = schema.safeParse(value);
