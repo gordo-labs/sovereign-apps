@@ -23,7 +23,7 @@
     "electron": "electron dist/main.js",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "test": "node --test test/*.test.ts"
+    "test": "pnpm build && node --test test/*.test.ts"
   },
   "dependencies": {
     "@sovereign-apps/protocol": "workspace:*",
