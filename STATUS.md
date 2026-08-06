@@ -9,12 +9,13 @@ It is a useful architecture sketch but is not currently functional.
 
 - GitHub: <https://github.com/gordo-labs/sovereign-apps>, public `main`.
 - Initial commit: `6c49f8b` (`chore: publish pre-alpha open-source baseline`).
-- Initial CI: red because pnpm is not pinned; this is the first SA-001 gate.
+- SA-001 workspace gate prepared on branch `codex/sa001-workspace`; frozen
+  install and task discovery are now pinned to Node 22/pnpm 9.15.9.
 - Version: `0.0.1`, pre-alpha; no stable release or tag.
 - npm bridge: `@gordo-labs/react-native-iroh@0.2.0` is public and resolves with
   `latest=0.2.0`; the former registry blocker is closed.
-- Standard install: still not reproducibly certified because pnpm/lockfile are
-  unpinned and first-party React/RN peers require alignment.
+- Standard install: lockfile and public bridge dependency are present; clean
+  Node 22 verification remains the merge gate (local host is Node 26).
 - Build/typecheck: fail in `@sovereign-apps/protocol`.
 - Tests: command succeeds with zero tests.
 - Lint: fails because the current prototype web app launches interactive setup.
