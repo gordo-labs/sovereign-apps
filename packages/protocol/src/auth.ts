@@ -26,6 +26,7 @@ import type {
   PairingSessionState,
 } from './pairing.js';
 import { PeerCapabilities } from './pairing.js';
+import { secureRandom } from './secure-pairing.js';
 
 /** Default capability set granted to a newly paired mobile peer. */
 const DEFAULT_GRANTED: PeerCapability[] = [
@@ -36,17 +37,7 @@ const DEFAULT_GRANTED: PeerCapability[] = [
 
 /** Generate a 16-byte random nonce for challenge. */
 export function generateNonce(): string {
-  const buf = new Uint8Array(16);
-  // Works in both browser (crypto.getRandomValues) and Node.js
-  // (global crypto in Node 22+ which this project targets)
-  if (typeof globalThis !== 'undefined' && typeof globalThis.crypto?.getRandomValues === 'function') {
-    globalThis.crypto.getRandomValues(buf);
-  } else {
-    // Fallback — Math.random based for environments without any crypto
-    for (let i = 0; i < 16; i++) {
-      buf[i] = Math.floor(Math.random() * 256);
-    }
-  }
+  const buf = secureRandom(16);
   return uint8ToBase64Url(buf);
 }
 
@@ -56,10 +47,7 @@ function uint8ToBase64Url(buf: Uint8Array): string {
   for (let i = 0; i < buf.byteLength; i++) {
     binary += String.fromCharCode(buf[i]);
   }
-  return btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 /**
@@ -101,9 +89,7 @@ export function buildResponse(
     nonce: challenge.nonce,
     signature: uint8ToBase64Url(signatureBytes),
     publicKey,
-    granted: challenge.requested.filter((c) =>
-      DEFAULT_GRANTED.includes(c),
-    ),
+    granted: challenge.requested.filter((c) => DEFAULT_GRANTED.includes(c)),
   };
 }
 

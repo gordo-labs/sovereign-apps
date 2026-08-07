@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sovereign-apps.dev/schemas/support-evidence.schema.json",
+  "title": "Sovereign Apps support evidence",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "evidenceId",
+    "platformId",
+    "caseId",
+    "commit",
+    "generatedAt",
+    "result",
+    "sanitized",
+    "packages",
+    "toolchain"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "evidenceId": { "type": "string", "pattern": "^[a-z0-9-]{8,80}$" },
+    "platformId": { "type": "string", "minLength": 3, "maxLength": 80 },
+    "caseId": { "type": "string", "minLength": 3, "maxLength": 80 },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{7,64}$" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "result": { "enum": ["pass", "fail", "skipped", "blocked"] },
+    "deviceClass": { "type": ["string", "null"], "maxLength": 120 },
+    "osVersionClass": { "type": ["string", "null"], "maxLength": 120 },
+    "durationSeconds": { "type": ["number", "null"], "minimum": 0 },
+    "notes": { "type": "string", "maxLength": 2000 },
+    "sanitized": { "const": true },
+    "physicalAttestationSha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+    "logs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "sha256"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-zA-Z0-9._-]{1,120}$" },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "packages": { "type": "object", "additionalProperties": { "type": "string", "maxLength": 80 } },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": { "type": ["string", "null"], "maxLength": 160 }
+    }
+  }
+}

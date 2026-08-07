@@ -12,6 +12,14 @@ export type NodeId = string;
 /** ALPN (Application-Layer Protocol Negotiation) string for QUIC streams. */
 export type Alpn = string;
 
+/** Version negotiated on the Iroh stream. Never silently decode another version. */
+export const WIRE_VERSION = 1 as const;
+export const WIRE_ALPN = 'sovereign-apps/1' as const;
+export const MAX_ID_BYTES = 128;
+export const MAX_CORRELATION_ID_BYTES = 128;
+export const MAX_MESSAGE_TYPE_BYTES = 64;
+export const MAX_PAYLOAD_BYTES = 2 * 1024 * 1024;
+
 /** A dialable Iroh peer address. */
 export type PeerAddr = {
   nodeId: NodeId;
@@ -40,8 +48,29 @@ export type SovereignMessage = {
   payload: Record<string, unknown>;
 };
 
+export type WireMessageType = 'request' | 'response' | 'event' | 'error' | 'close';
+
+/** Versioned, bounded envelope. Payload is codec-specific and untrusted. */
+export type WireEnvelope = {
+  version: typeof WIRE_VERSION;
+  type: WireMessageType;
+  correlationId: string;
+  payload: unknown;
+};
+
+export type WireError = {
+  code: string;
+  message: string;
+  retryable?: boolean;
+};
+
+export type WireClose = {
+  code: string;
+  reason?: string;
+};
+
 /** Transport status reported by a peer endpoint. */
 export type TransportStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 
 /** Default ALPN used by the sovereign-apps protocol. */
-export const DEFAULT_ALPN = 'sovereign-apps/1';
+export const DEFAULT_ALPN = WIRE_ALPN;

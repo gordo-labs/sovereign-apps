@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "project": "sovereign-apps",
+  "status": "pre-alpha",
+  "containsSecrets": false,
+  "automated": {
+    "frozenInstall": true,
+    "format": "required",
+    "lint": "required",
+    "typecheck": "required",
+    "workspaceTests": "required",
+    "contractE2E": "required",
+    "build": "required",
+    "packageDryRun": "required"
+  },
+  "platforms": {
+    "node": { "support": "ci", "evidence": "automated gates" },
+    "electron": { "support": "reference", "evidence": "unit and adapter tests" },
+    "android": { "support": "candidate", "evidence": "physical QR flow required for RC" },
+    "ios": { "support": "candidate", "evidence": "physical QR flow required for RC" },
+    "web": { "support": "reference", "evidence": "Next.js web-presence example build" }
+  },
+  "physicalReleaseCandidate": {
+    "required": true,
+    "flows": ["qr-auth", "bidirectional-example-message", "restart-reconnect", "revoke-denial"],
+    "artifacts": ["sanitized-timings.json", "support-matrix.json", "operator-checklist.md"],
+    "redactions": ["tokens", "private-endpoints", "device-identifiers", "qr-images"]
+  }
+}

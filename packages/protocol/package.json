@@ -2,16 +2,44 @@
   "name": "@sovereign-apps/protocol",
   "version": "0.0.1",
   "description": "Shared Iroh QUIC protocol types, framing, and connection primitives for Sovereign Apps",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gordo-labs/sovereign-apps.git",
+    "directory": "packages/protocol"
+  },
+  "bugs": {
+    "url": "https://github.com/gordo-labs/sovereign-apps/issues"
+  },
+  "homepage": "https://github.com/gordo-labs/sovereign-apps#readme",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22.12 <23"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "test": "node --test test/*.test.ts"
+    "test": "pnpm build && node --test test/*.test.ts"
   },
   "dependencies": {
     "zod": "^3.23"

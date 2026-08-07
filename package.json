@@ -2,23 +2,34 @@
   "name": "sovereign-apps",
   "version": "0.0.1",
   "private": true,
-  "description": "Monorepo template for sovereign P2P apps — Electron + React Native + Landing, powered by Iroh QUIC",
+  "description": "Monorepo template for sovereign P2P apps — Electron, React Native and optional web-presence modules",
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
-    "build": "pnpm --recursive build",
-    "dev": "pnpm --recursive dev",
-    "clean": "pnpm --recursive clean",
-    "lint": "pnpm --recursive lint",
-    "test": "pnpm --recursive test",
+    "build": "pnpm -r --if-present --sort build",
+    "dev": "pnpm -r --if-present --parallel dev",
+    "clean": "pnpm -r --if-present --sort clean",
     "format": "prettier --write \"**/*.{ts,tsx,js,cjs,json,yaml}\"",
-    "typecheck": "pnpm --recursive typecheck"
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,cjs,json,yaml}\"",
+    "tasks": "node scripts/list-workspace-tasks.mjs",
+    "release:audit": "node scripts/release-audit.mjs",
+    "release:pack": "node scripts/release-audit.mjs --pack",
+    "release:install-test": "node --test test/release/package-install.test.mjs",
+    "release:evidence-test": "node --test test/release/evidence-boundary.test.mjs",
+    "test:e2e": "pnpm build && node --test test/e2e/*.test.mjs",
+    "release:gates": "node scripts/release-gates.mjs",
+    "lint": "pnpm -r --if-present --sort lint",
+    "test": "pnpm -r --if-present --sort test",
+    "typecheck": "pnpm -r --if-present --sort typecheck"
   },
   "engines": {
     "node": ">=22.12 <23",
-    "pnpm": ">=9"
+    "pnpm": ">=9.15.9 <10"
   },
   "devDependencies": {
     "typescript": "^5.6",
     "prettier": "^3.4",
-    "@types/node": "^22"
+    "@types/node": "^22",
+    "eslint": "^9.17.0",
+    "typescript-eslint": "^8.18.0"
   }
 }

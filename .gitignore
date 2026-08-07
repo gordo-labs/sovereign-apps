@@ -1,4 +1,8 @@
 node_modules/
+working/
+artifacts/release/
+artifacts/support-evidence/
+*.tgz
 dist/
 .next/
 .build/

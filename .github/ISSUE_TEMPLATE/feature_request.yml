@@ -1,0 +1,20 @@
+name: Feature request
+description: Propose a neutral sovereign-app module or contract change
+labels: ['enhancement']
+body:
+  - type: textarea
+    attributes:
+      label: Problem and scope
+      description: Explain the platform-neutral problem. Do not include product-specific payloads or credentials.
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Task ID
+      description: Which backlog/task prompt does this affect?
+  - type: textarea
+    attributes:
+      label: Evidence and compatibility
+      description: Provide tests, platform matrix and protocol/backwards-compatibility impact.
+    validations:
+      required: true

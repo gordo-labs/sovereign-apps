@@ -1,0 +1,46 @@
+{
+  "name": "@sovereign-apps/ble-bootstrap",
+  "version": "0.0.1",
+  "description": "Optional BLE bootstrap transport for Sovereign Apps",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gordo-labs/sovereign-apps.git",
+    "directory": "packages/ble-bootstrap"
+  },
+  "bugs": {
+    "url": "https://github.com/gordo-labs/sovereign-apps/issues"
+  },
+  "homepage": "https://github.com/gordo-labs/sovereign-apps#readme",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22.12 <23"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm build && node --test test/*.test.ts",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.6"
+  }
+}

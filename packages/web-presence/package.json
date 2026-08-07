@@ -1,0 +1,58 @@
+{
+  "name": "@sovereign-apps/web-presence",
+  "version": "0.0.1",
+  "description": "Optional, untrusted signed presence and signaling cache for sovereign apps",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gordo-labs/sovereign-apps.git",
+    "directory": "packages/web-presence"
+  },
+  "bugs": {
+    "url": "https://github.com/gordo-labs/sovereign-apps/issues"
+  },
+  "homepage": "https://github.com/gordo-labs/sovereign-apps#readme",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./next": {
+      "types": "./dist/next.d.ts",
+      "import": "./dist/next.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test": "pnpm build && node --test test/*.test.mjs",
+    "prepack": "node ../../scripts/rewrite-published-manifest.mjs",
+    "postpack": "node ../../scripts/restore-published-manifest.mjs"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@sovereign-apps/protocol": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@sovereign-apps/protocol": {
+      "optional": true
+    }
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22.12 <23"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

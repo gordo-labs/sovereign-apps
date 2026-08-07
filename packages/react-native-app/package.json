@@ -2,25 +2,47 @@
   "name": "@sovereign-apps/react-native-app",
   "version": "0.0.1",
   "description": "Sovereign App Template — React Native shell with Iroh QUIC P2P networking",
+  "type": "module",
   "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "build:android": "react-native build-android",
     "build:ios": "react-native build-ios",
     "start": "react-native start",
     "lint": "eslint .",
-    "test": "node --test test/*.test.ts"
+    "test": "pnpm build && node --test test/*.test.mjs",
+    "prepack": "node ../../scripts/rewrite-published-manifest.mjs",
+    "postpack": "node ../../scripts/restore-published-manifest.mjs"
   },
   "dependencies": {
+    "@sovereign-apps/module-kernel": "workspace:*",
     "@sovereign-apps/protocol": "workspace:*",
-    "react-native": "^0.81",
-    "react": "^18.3"
+    "react-native": "^0.81.0",
+    "react": "^19.1.0",
+    "@gordo-labs/react-native-iroh": "^0.2.0"
   },
   "peerDependencies": {
-    "@gordo-labs/react-native-iroh": "^0.2.0"
+    "@gordo-labs/react-native-iroh": "^0.2.0",
+    "react-native-camera-kit": ">=15.0.0"
   },
   "devDependencies": {
     "typescript": "^5.6",
-    "@types/react": "^18",
+    "@types/react": "^19",
     "eslint": "^9"
   }
 }

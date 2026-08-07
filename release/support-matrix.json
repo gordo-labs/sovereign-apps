@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "1.0",
+  "supportPolicy": "Only rows with fresh passing evidence are eligible for stable releases.",
+  "platforms": [
+    {
+      "id": "desktop-macos-arm64",
+      "kind": "desktop",
+      "runner": "macos-14",
+      "support": "supported-build",
+      "physical": false,
+      "requiredForStable": true,
+      "buildCommand": ["pnpm", "--filter", "@sovereign-apps/electron-app", "build"]
+    },
+    {
+      "id": "desktop-macos-x64",
+      "kind": "desktop",
+      "runner": "macos-13",
+      "support": "supported-build",
+      "physical": false,
+      "requiredForStable": true,
+      "buildCommand": ["pnpm", "--filter", "@sovereign-apps/electron-app", "build"]
+    },
+    {
+      "id": "desktop-windows-x64",
+      "kind": "desktop",
+      "runner": "windows-2022",
+      "support": "supported-build",
+      "physical": false,
+      "requiredForStable": true,
+      "buildCommand": ["pnpm", "--filter", "@sovereign-apps/electron-app", "build"]
+    },
+    {
+      "id": "desktop-linux-x64-glibc",
+      "kind": "desktop",
+      "runner": "ubuntu-24.04",
+      "support": "supported-build",
+      "physical": false,
+      "requiredForStable": true,
+      "buildCommand": ["pnpm", "--filter", "@sovereign-apps/electron-app", "build"]
+    },
+    {
+      "id": "ios-physical",
+      "kind": "mobile",
+      "runner": "self-hosted-macos",
+      "support": "supported-physical",
+      "physical": true,
+      "requiredForStable": true,
+      "buildCommand": ["pnpm", "--filter", "@sovereign-apps/react-native-app", "build:ios"]
+    },
+    {
+      "id": "android-physical",
+      "kind": "mobile",
+      "runner": "self-hosted-linux-or-macos",
+      "support": "supported-physical",
+      "physical": true,
+      "requiredForStable": true,
+      "buildCommand": ["pnpm", "--filter", "@sovereign-apps/react-native-app", "build:android"]
+    },
+    {
+      "id": "desktop-freebsd",
+      "kind": "desktop",
+      "runner": null,
+      "support": "unsupported",
+      "physical": false,
+      "requiredForStable": false,
+      "reason": "No native Iroh optional artifact or CI build target is pinned."
+    },
+    {
+      "id": "web-browser-transport",
+      "kind": "web",
+      "runner": null,
+      "support": "experimental",
+      "physical": false,
+      "requiredForStable": false,
+      "reason": "The web-presence module is signaling/presence only; browsers are not a QUIC endpoint."
+    }
+  ],
+  "mandatoryCases": [
+    "qr-scan-first-pair",
+    "bidirectional-message",
+    "direct-wifi",
+    "relay",
+    "network-transition",
+    "background-foreground",
+    "restart",
+    "revoke-teardown"
+  ]
+}

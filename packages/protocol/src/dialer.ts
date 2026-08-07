@@ -7,9 +7,9 @@
 
 import { encodeFrame, parseMessage, MAX_FRAME_BYTES } from './framing.js';
 import type { SovereignMessage } from './types.js';
-import type { IrohDialSession, IrohDuplexConnection } from './connection.js';
+import type { IrohDialSession } from './connection.js';
 
-export class SovereignTunnelTransport implements IrohDuplexConnection {
+export class SovereignTunnelTransport {
   readonly peerId: string;
   private readonly handlers = new Set<(message: SovereignMessage) => void>();
   private readonly closeHandlers = new Set<(error?: Error) => void>();
@@ -24,9 +24,11 @@ export class SovereignTunnelTransport implements IrohDuplexConnection {
   ) {
     this.peerId = session.remoteId ? String(session.remoteId) : 'sovereign-peer';
     void this.readLoop();
-    void session.closed?.then(() => this.markClosed()).catch((error) => {
-      this.markClosed(error instanceof Error ? error : new Error(String(error)));
-    });
+    void session.closed
+      ?.then(() => this.markClosed())
+      .catch((error) => {
+        this.markClosed(error instanceof Error ? error : new Error(String(error)));
+      });
   }
 
   static async open(session: IrohDialSession): Promise<SovereignTunnelTransport> {
@@ -103,7 +105,11 @@ export class SovereignTunnelTransport implements IrohDuplexConnection {
 
         let pos = 0;
         while (pos + 4 <= combined.byteLength) {
-          const payloadLen = new DataView(combined.buffer, combined.byteOffset + pos, combined.byteLength - pos).getUint32(0, false);
+          const payloadLen = new DataView(
+            combined.buffer,
+            combined.byteOffset + pos,
+            combined.byteLength - pos,
+          ).getUint32(0, false);
           const frameEnd = pos + 4 + payloadLen;
           if (frameEnd > combined.byteLength) break;
           const payload = combined.slice(pos + 4, frameEnd);

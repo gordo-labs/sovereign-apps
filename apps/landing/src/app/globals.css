@@ -1,0 +1,9 @@
+:root { color-scheme: light; font-family: system-ui, sans-serif; }
+body { max-width: 52rem; margin: 0 auto; padding: 2rem 1rem; line-height: 1.5; }
+form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; }
+label { width: 100%; }
+input { min-width: 18rem; padding: .5rem; }
+button { padding: .5rem .8rem; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; margin-top: 1rem; }
+dt { font-weight: 600; }
+dd { margin: 0; overflow-wrap: anywhere; }
