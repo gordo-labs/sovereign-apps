@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { encodeStreamHello } from '../../protocol/dist/index.js';
-import { normalizeCandidate, ReactNativeIrohEndpoint } from '../dist/transport-adapter.js';
+import {
+  normalizeCandidate,
+  normalizeCandidates,
+  ReactNativeIrohEndpoint,
+} from '../dist/transport-adapter.js';
+import { NATIVE_TCP_STREAM_PREAMBLE } from '../../protocol/dist/index.js';
 
 const fakeConnection = (responseAlpn = null) => {
   const messages = new Set();
@@ -32,6 +37,7 @@ const fakeConnection = (responseAlpn = null) => {
 
 function fakeBridge(responseAlpn = null) {
   const connection = fakeConnection(responseAlpn);
+  let lastTargetOptions = null;
   const session = {
     openStream: async () => connection,
     isClosed: () => false,
@@ -46,8 +52,12 @@ function fakeBridge(responseAlpn = null) {
     connect: async () => connection,
     connectTarget: async () => connection,
     openSession: async () => session,
-    openTargetSession: async () => session,
+    openTargetSession: async (options) => {
+      lastTargetOptions = options;
+      return session;
+    },
     connection,
+    lastTargetOptions: () => lastTargetOptions,
   };
 }
 
@@ -88,6 +98,25 @@ test('rejects display-only node ids and mismatched JSON tickets', () => {
   );
 });
 
+test('combines direct and relay candidates for the same endpoint target', () => {
+  const direct = {
+    id: 'peer',
+    kind: 'direct',
+    address: '{"id":"peer","addrs":["192.168.1.10:42424"]}',
+  };
+  const relay = { id: 'peer', kind: 'relay', address: 'https://relay.example' };
+  assert.deepEqual(normalizeCandidates([direct, relay]).target, {
+    kind: 'endpoint-address',
+    nodeId: 'peer',
+    directAddresses: ['192.168.1.10:42424'],
+    relayUrl: 'https://relay.example',
+  });
+  assert.throws(
+    () => normalizeCandidates([direct, { ...relay, id: 'other' }]),
+    /same non-empty Iroh node/,
+  );
+});
+
 test('endpoint lifecycle is explicit and stream frames are not double-framed', async () => {
   const bridge = fakeBridge();
   const endpoint = new ReactNativeIrohEndpoint({ bridge, candidates: [] });
@@ -102,6 +131,29 @@ test('endpoint lifecycle is explicit and stream frames are not double-framed', a
   await session.close('test');
   await endpoint.stop();
   assert.equal(endpoint.state, 'stopped');
+});
+
+test('connect passes all configured paths to the bridge in one typed dial', async () => {
+  const bridge = fakeBridge();
+  const direct = {
+    id: 'peer',
+    kind: 'direct',
+    address: '{"id":"peer","addrs":["192.168.1.10:42424"]}',
+  };
+  const relay = { id: 'peer', kind: 'relay', address: 'https://relay.example' };
+  const endpoint = new ReactNativeIrohEndpoint({ bridge, candidates: [direct, relay] });
+  await endpoint.start({ signal: new AbortController().signal });
+  await endpoint.connect(direct);
+  assert.deepEqual(bridge.lastTargetOptions(), {
+    target: {
+      kind: 'endpoint-address',
+      nodeId: 'peer',
+      directAddresses: ['192.168.1.10:42424'],
+      relayUrl: 'https://relay.example',
+    },
+    alpn: 'sovereign-apps/1',
+    timeoutMs: 4_500,
+  });
 });
 
 test('native unavailable does not become ready', async () => {
@@ -120,4 +172,57 @@ test('stream hello rejects a peer advertising a different application domain', a
   await endpoint.start({ signal: new AbortController().signal });
   const session = await endpoint.connect({ id: 'peer', kind: 'iroh', address: '203.0.113.2:4433' });
   await assert.rejects(() => session.openStream(), /mismatch/);
+});
+
+test('bridge 0.3 TCP forwarder uses the paired peer target, shared ALPN and neutral preamble', async () => {
+  const bridge = fakeBridge();
+  let options;
+  let stopped = false;
+  bridge.startTcpForwarder = async (value) => {
+    options = value;
+    return {
+      id: 'forwarder-1',
+      port: 43121,
+      stats: () => ({
+        activeConnections: 0,
+        totalConnections: 0,
+        failedStreams: 0,
+        bytesUp: 0,
+        bytesDown: 0,
+        activeDownMs: 0,
+      }),
+      stop: async () => {
+        stopped = true;
+      },
+      isStopped: () => stopped,
+    };
+  };
+  const endpoint = new ReactNativeIrohEndpoint({ bridge });
+  await endpoint.start({ signal: new AbortController().signal });
+  const candidate = { id: 'peer', kind: 'iroh', address: 'https://relay.example' };
+  const forwarder = await endpoint.startTcpForwarder(candidate);
+  assert.equal(forwarder.port, 43121);
+  assert.deepEqual(options, {
+    target: {
+      kind: 'endpoint-address',
+      nodeId: 'peer',
+      relayUrl: 'https://relay.example',
+    },
+    alpn: 'sovereign-apps/1',
+    listenPort: 0,
+    preamble: NATIVE_TCP_STREAM_PREAMBLE,
+  });
+  await endpoint.stop();
+  assert.equal(stopped, true);
+});
+
+test('bridge 0.2 keeps framed pairing available but reports TCP forwarding as unsupported', async () => {
+  const endpoint = new ReactNativeIrohEndpoint({ bridge: fakeBridge() });
+  await endpoint.start({ signal: new AbortController().signal });
+  await assert.rejects(
+    () =>
+      endpoint.startTcpForwarder({ id: 'peer', kind: 'iroh', address: 'https://relay.example' }),
+    /requires @gordo-labs\/react-native-iroh 0.3/,
+  );
+  await endpoint.stop();
 });

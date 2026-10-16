@@ -1,7 +1,9 @@
 # AGENTS.md — Sovereign Apps
 
-Monorepo template for sovereign P2P apps: **Electron** (desktop), **React Native**
-(mobile), **Landing** (web preview) — all connected via Iroh QUIC.
+Pre-alpha component monorepo for desktop/mobile QR pairing and optional
+application-neutral communication modules. Minimal Electron and React Native
+hosts are checked in. Physical host verification, durable grant storage and an
+upstream-published bridge 0.3 runtime are still pending.
 
 ## Repository structure
 
@@ -12,7 +14,10 @@ sovereign-apps/
 │   ├── electron-app/      # @sovereign-apps/electron-app — desktop shell + Iroh node
 │   └── react-native-app/  # @sovereign-apps/react-native-app — mobile shell + Iroh bridge
 ├── apps/
-│   └── landing/           # @sovereign-apps/landing — Next.js PRISONS preview
+│   ├── landing/           # @sovereign-apps/landing — minimal Next.js web-presence example
+│   └── mobile/            # @sovereign-apps/mobile-example — iOS/Android QR host
+├── vendor/
+│   └── iroh-react-native-bridge/ # public bridge source pinned to 0.3.0
 ├── docs/
 ├── .github/
 └── pnpm-workspace.yaml
@@ -23,9 +28,10 @@ sovereign-apps/
 1. `PROJECT.json` + `STATUS.md` + `DOCS-MAP.md`
 2. `git status --short --branch`
 
-The repository is pre-alpha. Do not treat skeletons, stubs, simulated UI or a
-zero-test command as functional. Work from `working/BACKLOG.md` and run only the
-task explicitly assigned.
+The repository is pre-alpha. Do not treat in-process fixtures as physical
+device evidence. Public release and implementation state is documented in
+`docs/PUBLISHING-READINESS.md` and `docs/ROADMAP.md`. Local `working/` notes are
+not tracked or required.
 
 ## Build
 
@@ -36,17 +42,18 @@ pnpm build
 
 ## Protocol
 
-- **Transport:** Iroh QUIC via `@momics/iroh-http-node` (Electron) and `@gordo-labs/react-native-iroh` (mobile)
+- **Transport:** Electron is the Iroh responder; `@gordo-labs/react-native-iroh` is the mobile outbound dialer
 - **ALPN:** `sovereign-apps/1`
 - **Framing:** 4-byte big-endian length prefix + JSON payload (max 2 MB)
 - **Relay:** n0 relay by default, direct hole-punch for LAN peers
 
-## Derived from
+## Communication contract
 
-Music Hub's sovereign networking implementation:
-- `desktop/src/core/sovereign/iroh-hub-responder.ts` — Electron listener
-- `desktop/src/core/sovereign/iroh-hub-dialer.ts` — Electron dialer
-- `iroh-react-native-bridge/rust/iroh_mobile_bridge/src/lib.rs` — RN native bridge
+The user scans or opens a desktop-generated, short-lived QR pairing envelope.
+After confirming the desktop fingerprint, the mobile endpoint dials Electron
+over Iroh and sends the one-use session reference on the encrypted stream.
+Electron binds its grant to the authenticated Iroh peer ID. The optional
+node-to-node and presence modules are not required for this flow.
 
 ## License
 

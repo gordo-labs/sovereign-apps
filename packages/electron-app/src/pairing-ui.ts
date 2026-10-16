@@ -137,14 +137,13 @@ export async function buildPairingHtml(params: {
     <li>Open the mobile app on the same WiFi network</li>
     <li>Scan the QR code above, or the app will auto-discover this peer</li>
     <li>Verify the fingerprint matches what the phone shows</li>
-    <li>Connection is authenticated via Ed25519 challenge-response</li>
+    <li>The one-use QR session is bound to the authenticated Iroh peer</li>
     <li>Subsequent connections use Iroh QUIC (relay or direct hole-punch)</li>
   </ol>
 </div>
 
 <div class="lan-info">
-  LAN advertisement on port ${escapeHtml(String(params.advertisePort))}
-  · Direct connection via WiFi
+  The QR carries the Iroh bootstrap address · direct Wi-Fi or relay path
 </div>
 
 <div class="status-section">
@@ -252,6 +251,7 @@ function escapeHtml(s: string): string {
 }
 
 export type PairingUiHandle = {
+  window: BrowserWindow;
   onPeerScanned(hubId: string): void;
   onHandshakeProgress(step: string): void;
   onPaired(hubId: string, capabilities: string[]): void;
@@ -263,7 +263,7 @@ export type PairingUiHandle = {
 export async function createPairingWindow(params: {
   nodeId: string;
   peerId: string;
-  qrPayload: PairingQrPayload;
+  qrPayload: PairingQrPayload | SecurePairingQrEnvelope;
   fingerprint: string;
   advertisePort: number;
 }): Promise<PairingUiHandle> {
@@ -284,6 +284,7 @@ export async function createPairingWindow(params: {
   win.loadURL(`data:text/html;base64,${Buffer.from(html).toString('base64')}`);
 
   return {
+    window: win,
     onPeerScanned(hubId: string) {
       win.webContents.executeJavaScript(
         `window.pairingUI?.onPeerScanned(${JSON.stringify(hubId)})`,

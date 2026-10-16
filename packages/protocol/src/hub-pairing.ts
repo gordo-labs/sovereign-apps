@@ -2,7 +2,7 @@
  * Sovereign Apps Protocol — HubPairing service.
  *
  * Complete pairing flow for desktop ↔ mobile initial WiFi setup.
- * Premounted from Music Hub's HubPairing + MobileHubClient implementation.
+ * Pairing helpers shared by the desktop and mobile template modules.
  *
  * Flow:
  *   1. Desktop starts Iroh endpoint, generates pairing QR

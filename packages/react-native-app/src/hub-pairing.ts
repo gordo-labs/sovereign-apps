@@ -8,7 +8,7 @@
  *   4. Complete auth handshake
  *   5. Store paired peer record
  *
- * Mirrors Music Hub's MobileHubClient architecture.
+ * Keeps QR parsing, user confirmation and grant acceptance separate from Iroh transport.
  */
 
 import type {
@@ -219,6 +219,34 @@ export class MobilePairingClient {
     return peer;
   }
 
+  /** Accept a grant bound to the Iroh-authenticated peer after one-use QR pairing. */
+  acceptIrohGrant(grant: PairingGrant, mobileNodeId: string): PairedPeer {
+    if (this.state !== 'fingerprint_verified' || !this.secureEnvelope)
+      throw new Error('Must scan and verify the pairing QR before accepting a grant');
+    if (
+      !mobileNodeId ||
+      !grant.id ||
+      grant.nodeId !== mobileNodeId ||
+      grant.peerKey !== mobileNodeId
+    )
+      throw new Error('Pairing grant is not bound to a valid Iroh peer');
+    if (Date.parse(grant.expiresAt) <= Date.now() || grant.revokedAt)
+      throw new Error('Pairing grant is expired or revoked');
+    const peer: PairedPeer = {
+      hubId: this.secureEnvelope.hubId,
+      nodeId: grant.nodeId,
+      publicKey: this.secureEnvelope.desktopPublicKey,
+      capabilities: [...grant.capabilities],
+      pairedAt: grant.issuedAt,
+      expiresAt: grant.expiresAt,
+      directAddrs: [],
+    };
+    this.paired = peer;
+    this.state = 'paired';
+    this.emit({ type: 'paired', hubId: peer.hubId });
+    return peer;
+  }
+
   /**
    * Handle a grant from the desktop peer.
    */
@@ -241,6 +269,10 @@ export class MobilePairingClient {
   /** Get current state. */
   getState(): PairingState {
     return this.state;
+  }
+
+  getSessionRef(): string | null {
+    return this.secureEnvelope?.sessionRef ?? null;
   }
 
   /** Get the paired peer record. */

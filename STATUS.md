@@ -1,28 +1,44 @@
 # Sovereign Apps — Status
 
-## 2026-08-06 — Public pre-alpha, integration gates passing
+## 2026-10-16 — Public pre-alpha component template
 
-The source has been reviewed as a candidate neutral sovereign-app template.
-The neutral modular reference flow is implemented and its automated integration
-gates pass. It remains pre-alpha: physical native evidence is still required
-before a stable release claim.
+The repository contains reusable protocol, transport, pairing and optional
+bootstrap/web-presence modules. Electron now displays the Iroh bootstrap QR;
+React Native scans or opens it, confirms the fingerprint, dials the desktop,
+and exchanges a one-use pairing grant bound to the Iroh peer. The flow has
+contract tests but has not been verified on physical iOS/Android hosts.
 
 ### Verified state
 
 - GitHub: <https://github.com/gordo-labs/sovereign-apps>, public `main`.
-- Current integration branch: `codex/stabilize-sovereign-apps`; public remote is
+- Current branch: `codex/stabilize-sovereign-apps`; public remote is
   <https://github.com/gordo-labs/sovereign-apps>.
-- Frozen install and task discovery are pinned to Node 22/pnpm 9.15.9. The
-  complete release gate has now also passed on Node 22.22.3.
+- The `working/` folder is intentionally local-only and ignored. Public docs and
+  contribution guidance are self-contained under the repository's `docs/` tree.
 - Version: `0.0.1`, pre-alpha; no stable release or tag.
 - npm bridge: `@gordo-labs/react-native-iroh@0.2.0` is public and resolves with
   `latest=0.2.0`; the former registry blocker is closed.
-- Standard install, format, lint, typecheck, build, workspace tests, contract
-  E2E, release audit and package dry-run all pass under Node 22 (and were also
-  smoke-checked on the host Node 26).
-- The protocol, module kernel, desktop Iroh adapter, React Native adapter,
-  secure pairing, LAN discovery, route policy, web presence and generator are
-  implemented and covered by non-empty tests.
+- `apps/mobile` is a checked-in React Native 0.81.6 iOS/Android host with
+  camera permissions and the `sovereign://pair` scheme. It imports the common
+  pairing UI and autolinks the native bridge.
+- The host pins public bridge source at commit `3d9ec405` (0.3.0) because npm
+  still serves 0.2.0. Rustup targets are required to generate platform
+  artifacts; generated binaries are not committed in the submodule.
+- The mobile adapter uses typed endpoint targets, combines direct and relay
+  hints for one peer, and feature-detects the bridge 0.3 TCP-forwarder API.
+- The template now completes QR intake, fingerprint confirmation, Iroh dial,
+  one-use session proof and peer-bound grant exchange over a framed stream.
+  The one-use grant is an initial example contract, not persisted across app
+  restarts or backed by a concrete mobile secure-storage adapter.
+- The neutral TCP-forwarder preamble and Electron extra-stream adapter are
+  implemented and contract-tested. Electron exposes a loopback-only `/health`
+  service only after the one-use grant succeeds.
+- Native end-to-end is not verified: Rustup iOS/Android targets are missing
+  here, and the registry's 0.2.0 iOS package fails linking with missing UniFFI
+  symbols. The HTTP tunnel cannot be claimed runnable until bridge 0.3 artifacts
+  build and link.
+- The bridge is mobile outbound-only; the desktop is the responder. The QUIC
+  streams are bidirectional after connection.
 - The web surface is a neutral `@sovereign-apps/web-presence` package plus a
   minimal Next.js example under `apps/landing`; it is an installable module
   example, not a product marketing landing.
@@ -43,28 +59,36 @@ before a stable release claim.
   evidence manifest are now present. CI keeps physical QR/auth/reconnect/revoke
   evidence explicit for release candidates; this does not claim that evidence.
 
-### Remaining release blockers
+### Before claiming a runnable app or stable release
 
-- Real Electron ↔ physical iOS/Android QR, camera, secure-storage, reconnect
-  and revoke evidence is not available in this workspace.
+- Generate the pinned bridge 0.3 binaries and verify the checked-in hosts on
+  physical devices through QR → fingerprint → Iroh → one-use grant.
+- Physical iOS/Android pairing, forwarder, secure-storage and reconnect/revoke
+  evidence.
+- A concrete minimal cross-platform local database starter; identity keys and
+  bearer secrets must stay in platform secure storage.
+- An accurate clean-clone guide and freshly run release gates.
 - Native BLE, platform mDNS permissions and device/network measurements remain
   unimplemented; Bluetooth data transport is explicitly a no-go (bootstrap only).
 - The opt-in real two-node Iroh test is skipped unless native/runtime fixtures
   are supplied. No stable tag or npm publish is being made.
 
-### Next work
+### Current recommendation
 
-Follow [working/BACKLOG.md](./working/BACKLOG.md) for the remaining physical
-evidence work. Every task retains an atomic prompt under `working/prompts/`;
-`ORCHESTRATOR.txt` records the dependency order.
+Publishing this source as a pre-alpha component repository is reasonable after
+reviewing [docs/PUBLISHING-READINESS.md](./docs/PUBLISHING-READINESS.md). Do not
+present it as a production-ready or immediately runnable desktop/mobile app;
+the pinned native binaries still need to be generated with Rustup.
+Node-to-node transport remains optional and is not a prerequisite for the first
+desktop/mobile flow.
 
 Initial CI evidence:
 <https://github.com/gordo-labs/sovereign-apps/actions/runs/31096384990>.
 
-The current SA-006 gate is `pnpm release:gates`. It deliberately does not tag,
-publish, or promote this pre-alpha repository.
+The release gate is `pnpm release:gates`. It does not tag, publish, or promote
+this pre-alpha repository.
 
 SA-012 now supplies the native support matrix, sanitized evidence schema,
-operator runbook, and cross-OS workflow. Physical iOS/Android host projects and
-hardware evidence are intentionally still blocking; see
+operator runbook, and cross-OS workflow. Physical iOS/Android and native
+artifact evidence are intentionally still blocking; see
 [`docs/NATIVE-RELEASE-OPERATIONS.md`](docs/NATIVE-RELEASE-OPERATIONS.md).

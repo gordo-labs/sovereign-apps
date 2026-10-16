@@ -69,3 +69,36 @@ test('mobile rejects a grant for another identity', () => {
     /peer identity mismatch/,
   );
 });
+
+test('mobile accepts an unexpired grant bound to the authenticated Iroh identity after fingerprint confirmation', () => {
+  const envelope = buildPairingQrEnvelope({
+    protocol: 'sovereign-apps/1',
+    alpn: 'sovereign-apps/1',
+    hubId: 'sovereign-app',
+    nodeId: 'desktop-node',
+    desktopPublicKey: 'desktop-key',
+    sessionRef: 'B'.repeat(32),
+    expiresAt: new Date(Date.now() + 60_000).toISOString(),
+  });
+  const client = new MobilePairingClient();
+  assert.equal('error' in client.handleQrScan(JSON.stringify(envelope)), false);
+  assert.equal(client.getSessionRef(), envelope.sessionRef);
+  client.verifyFingerprint();
+  const peer = client.acceptIrohGrant(
+    {
+      id: 'grant-id',
+      peerKey: 'mobile-node',
+      nodeId: 'mobile-node',
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+      capabilities: ['app.read'],
+      issuedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      refreshExpiresAt: new Date(Date.now() + 120_000).toISOString(),
+      rotation: 0,
+    },
+    'mobile-node',
+  );
+  assert.equal(client.getState(), 'paired');
+  assert.equal(peer.nodeId, 'mobile-node');
+});

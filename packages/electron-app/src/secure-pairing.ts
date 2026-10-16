@@ -42,13 +42,7 @@ export class DesktopPairingAuthority {
     });
     this.pending.set(session.sessionRef, {
       envelope,
-      allowed: input.allowedCapabilities ?? [
-        'app.read',
-        'app.write',
-        'media.stream',
-        'relay.provide',
-        'relay.use',
-      ],
+      allowed: input.allowedCapabilities ?? ['app.read'],
     });
     return { envelope, text: serializePairingQrEnvelope(envelope) };
   }
@@ -81,6 +75,26 @@ export class DesktopPairingAuthority {
         intersectCapabilities(transcript.granted, transcript.requested),
         pending.allowed,
       ),
+    });
+  }
+
+  /** Complete QR pairing over the already authenticated Iroh transport. */
+  completeScannedPairing(sessionRef: string, transportPeerId: string): PairingGrant {
+    const pending = this.pending.get(sessionRef);
+    if (!pending || pending.envelope.sessionRef !== sessionRef)
+      throw new Error('Unknown or already consumed pairing session');
+    if (Date.parse(pending.envelope.expiresAt) <= Date.now()) {
+      this.pending.delete(sessionRef);
+      throw new Error('Pairing session expired');
+    }
+    if (!transportPeerId || transportPeerId.length > 512)
+      throw new Error('Invalid authenticated Iroh peer identity');
+    this.sessions.consume(sessionRef);
+    this.pending.delete(sessionRef);
+    return this.grants.issue({
+      peerKey: transportPeerId,
+      nodeId: transportPeerId,
+      capabilities: [...pending.allowed],
     });
   }
 }

@@ -83,6 +83,54 @@ test('missing native runtime is an observable hard error', async () => {
   );
 });
 
+test('extra QUIC streams can be adapted to a loopback TCP service after preamble validation', async () => {
+  const { createServer } = await import('node:net');
+  const { forwardNativeTcpStream } = await import('../dist/native-tcp-forwarder.js');
+  const { NATIVE_TCP_STREAM_PREAMBLE } = await import('../../protocol/dist/index.js');
+  const service = createServer((socket) => socket.on('data', (data) => socket.write(data)));
+  await new Promise<void>((resolve) => service.listen(0, '127.0.0.1', resolve));
+  const address = service.address();
+  assert.ok(address && typeof address !== 'string');
+
+  const toForwarder = new TransformStream<Uint8Array, Uint8Array>();
+  const fromForwarder = new TransformStream<Uint8Array, Uint8Array>();
+  const forward = forwardNativeTcpStream(
+    { readable: toForwarder.readable, writable: fromForwarder.writable },
+    { port: address.port },
+  );
+  const writer = toForwarder.writable.getWriter();
+  const reader = fromForwarder.readable.getReader();
+  const payload = new TextEncoder().encode('sovereign-template');
+  const request = new Uint8Array(NATIVE_TCP_STREAM_PREAMBLE.length + payload.length);
+  request.set(NATIVE_TCP_STREAM_PREAMBLE);
+  request.set(payload, NATIVE_TCP_STREAM_PREAMBLE.length);
+  await writer.write(request);
+  const response = await reader.read();
+  assert.deepEqual(new Uint8Array(response.value ?? []), payload);
+  await writer.close();
+  await forward;
+  await new Promise<void>((resolve) => service.close(() => resolve()));
+});
+
+test('extra QUIC stream with an unknown preamble is rejected before app bytes reach TCP', async () => {
+  const { createServer } = await import('node:net');
+  const { forwardNativeTcpStream } = await import('../dist/native-tcp-forwarder.js');
+  const service = createServer();
+  await new Promise<void>((resolve) => service.listen(0, '127.0.0.1', resolve));
+  const address = service.address();
+  assert.ok(address && typeof address !== 'string');
+
+  const toForwarder = new TransformStream<Uint8Array, Uint8Array>();
+  const fromForwarder = new TransformStream<Uint8Array, Uint8Array>();
+  const forward = forwardNativeTcpStream(
+    { readable: toForwarder.readable, writable: fromForwarder.writable },
+    { port: address.port },
+  );
+  await toForwarder.writable.getWriter().write(new TextEncoder().encode('not-a-valid-preamble'));
+  await assert.rejects(forward, /preamble is not recognized/);
+  await new Promise<void>((resolve) => service.close(() => resolve()));
+});
+
 test('dial validates the application hello when native Iroh has no ALPN option', async () => {
   const node = await ElectronIrohNode.create({
     key: new Uint8Array(32).fill(3),

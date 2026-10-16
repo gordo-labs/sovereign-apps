@@ -1,6 +1,7 @@
 # Legacy status location
 
-The canonical status moved to [`../STATUS.md`](../STATUS.md).
+The canonical status is [`../STATUS.md`](../STATUS.md).
 
-The previous document incorrectly marked prototype surfaces as complete. The
-verified audit is [`AUDIT-2026-08-06.md`](./AUDIT-2026-08-06.md).
+The August audit is historical, not current. See the
+[`PUBLISHING-READINESS.md`](./PUBLISHING-READINESS.md) and
+[`BRIDGE-INTEGRATION.md`](./BRIDGE-INTEGRATION.md) for current findings.

@@ -1,0 +1,3 @@
+[submodule "vendor/iroh-react-native-bridge"]
+	path = vendor/iroh-react-native-bridge
+	url = https://github.com/gordo-labs/iroh-react-native-bridge.git

@@ -11,6 +11,11 @@ dist/
 .DS_Store
 build-artifacts/
 DerivedData/
+Pods/
+**/Pods/
+android/.gradle/
+ios/build/
+**/ios/build/
 coverage/
 *.log
 .env

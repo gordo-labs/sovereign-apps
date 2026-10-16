@@ -6,13 +6,19 @@ import type {
 } from '@sovereign-apps/module-kernel';
 import {
   DEFAULT_ALPN as PROTOCOL_DEFAULT_ALPN,
+  NATIVE_TCP_STREAM_PREAMBLE,
   negotiateStreamHello,
 } from '@sovereign-apps/protocol';
-import type { BridgeLike, IrohBridgeConnection, IrohBridgeSession } from './iroh-bridge.js';
+import type {
+  BridgeLike,
+  IrohBridgeConnection,
+  IrohBridgeSession,
+  IrohTcpForwarder,
+} from './iroh-bridge.js';
 import { getIrohBridge, bridgeDiagnostics } from './iroh-bridge.js';
 
 export const RN_IROH_MODULE_ID = 'transport.iroh.react-native';
-export const RN_IROH_VERSION = '0.2.0';
+export const RN_IROH_VERSION = '0.2.0+';
 export const DEFAULT_ALPN = PROTOCOL_DEFAULT_ALPN;
 export const MAX_FRAME_BYTES = 2 * 1024 * 1024;
 
@@ -126,6 +132,81 @@ export function normalizeCandidate(
       nodeId: candidate.id,
       directAddresses: isSocket(address) ? [address] : [],
       relayUrl: isRelay(address) ? address : null,
+    },
+  };
+}
+
+/**
+ * Build the complete typed address target expected by recent bridge versions.
+ * Passing direct addresses and the relay together lets Iroh perform path
+ * selection and hole-punching inside one dial rather than restarting per hint.
+ */
+export function normalizeCandidates(
+  candidates: readonly TransportCandidate[],
+): CandidateAddress & { candidate: TransportCandidate } {
+  if (candidates.length === 0)
+    throw new ReactNativeTransportError(
+      'INVALID_DIAL_TARGET',
+      'At least one candidate is required',
+    );
+  const nodeIds = new Set(candidates.map((candidate) => candidate.id.trim()));
+  if (nodeIds.size !== 1 || nodeIds.has(''))
+    throw new ReactNativeTransportError(
+      'INVALID_DIAL_TARGET',
+      'All dial candidates must identify the same non-empty Iroh node',
+    );
+
+  const normalized = candidates.map(normalizeCandidate);
+  const tickets = normalized.filter(
+    (item): item is typeof item & { target: { kind: 'endpoint-ticket'; ticket: string } } =>
+      item.target.kind === 'endpoint-ticket',
+  );
+  if (tickets.length > 1 && new Set(tickets.map((item) => item.target.ticket)).size > 1)
+    throw new ReactNativeTransportError(
+      'INVALID_DIAL_TARGET',
+      'Multiple different endpoint tickets were provided for one peer',
+    );
+  if (tickets.length > 0) return tickets[0]!;
+
+  const directAddresses = [
+    ...new Set(
+      normalized.flatMap((item) =>
+        item.target.kind === 'endpoint-address' ? (item.target.directAddresses ?? []) : [],
+      ),
+    ),
+  ];
+  const relayUrls = [
+    ...new Set(
+      normalized.flatMap((item) => {
+        if (item.target.kind !== 'endpoint-address' || !item.target.relayUrl) return [];
+        return [item.target.relayUrl];
+      }),
+    ),
+  ];
+  const preferredRelay = [...candidates]
+    .sort((left, right) => (right.priority ?? 0) - (left.priority ?? 0))
+    .map((candidate) => normalizeCandidate(candidate))
+    .find((item) => item.target.kind === 'endpoint-address' && Boolean(item.target.relayUrl));
+  const relayUrl =
+    preferredRelay?.target.kind === 'endpoint-address' ? preferredRelay.target.relayUrl : null;
+  if (relayUrls.length > 1)
+    throw new ReactNativeTransportError(
+      'INVALID_DIAL_TARGET',
+      'Multiple relay URLs cannot be represented by one Iroh endpoint target',
+    );
+  if (directAddresses.length === 0 && !relayUrl)
+    throw new ReactNativeTransportError(
+      'INVALID_DIAL_TARGET',
+      'Candidates contain no usable direct address, relay URL, or endpoint ticket',
+    );
+
+  return {
+    candidate: candidates[0]!,
+    target: {
+      kind: 'endpoint-address',
+      nodeId: candidates[0]!.id.trim(),
+      ...(directAddresses.length > 0 ? { directAddresses } : {}),
+      relayUrl,
     },
   };
 }
@@ -273,6 +354,7 @@ export class ReactNativeIrohEndpoint implements TransportEndpoint {
   state: ReactNativeTransportState = 'idle';
   private readonly bridge: BridgeLike;
   private readonly configured: readonly TransportCandidate[];
+  private readonly forwarders = new Set<IrohTcpForwarder>();
   constructor(options: { bridge?: BridgeLike; candidates?: readonly TransportCandidate[] } = {}) {
     this.bridge = options.bridge ?? getIrohBridge();
     this.configured = options.candidates ?? [];
@@ -301,6 +383,8 @@ export class ReactNativeIrohEndpoint implements TransportEndpoint {
     }
     this.state = 'stopping';
     try {
+      await Promise.all([...this.forwarders].map((forwarder) => forwarder.stop()));
+      this.forwarders.clear();
       await this.bridge.stop();
       this.state = 'stopped';
     } catch (error) {
@@ -325,7 +409,11 @@ export class ReactNativeIrohEndpoint implements TransportEndpoint {
   ): Promise<TransportSession> {
     if (this.state !== 'ready')
       throw new ReactNativeTransportError('NOT_READY', 'Start the endpoint before connecting');
-    const normalized = normalizeCandidate(candidate);
+    const compatibleCandidates = [
+      candidate,
+      ...this.configured.filter((item) => item.id === candidate.id && item !== candidate),
+    ];
+    const normalized = normalizeCandidates(compatibleCandidates);
     const call = this.bridge.openTargetSession({
       target: normalized.target,
       alpn: DEFAULT_ALPN,
@@ -337,6 +425,34 @@ export class ReactNativeIrohEndpoint implements TransportEndpoint {
     } catch (error) {
       throw new ReactNativeTransportError('DIAL_FAILED', 'Iroh dial failed', { cause: error });
     }
+  }
+
+  /**
+   * Start the bridge 0.3 TCP-to-Iroh data plane for a peer that has already
+   * completed the application pairing/grant flow. Bridge 0.2 remains usable
+   * for framed messaging but intentionally cannot start this optional module.
+   */
+  async startTcpForwarder(candidate: TransportCandidate): Promise<IrohTcpForwarder> {
+    if (this.state !== 'ready')
+      throw new ReactNativeTransportError('NOT_READY', 'Start the endpoint before forwarding');
+    const startForwarder = this.bridge.startTcpForwarder;
+    if (!startForwarder)
+      throw new ReactNativeTransportError(
+        'UNSUPPORTED_NATIVE_API',
+        'TCP forwarding requires @gordo-labs/react-native-iroh 0.3 or newer',
+      );
+    const normalized = normalizeCandidates([
+      candidate,
+      ...this.configured.filter((item) => item.id === candidate.id && item !== candidate),
+    ]);
+    const forwarder = await startForwarder({
+      target: normalized.target,
+      alpn: DEFAULT_ALPN,
+      listenPort: 0,
+      preamble: NATIVE_TCP_STREAM_PREAMBLE,
+    });
+    this.forwarders.add(forwarder);
+    return forwarder;
   }
   async diagnostics(): Promise<{ packageVersion: string; nodeId: string; running: boolean }> {
     return bridgeDiagnostics(this.bridge);

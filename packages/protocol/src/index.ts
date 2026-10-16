@@ -5,6 +5,7 @@ export * from './types.js';
 export * from './framing.js';
 export * from './wire.js';
 export * from './stream-hello.js';
+export * from './native-streams.js';
 export * from './schemas.js';
 export * from './connection.js';
 export * from './dialer.js';

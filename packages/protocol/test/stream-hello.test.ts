@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { decodeStreamHello, encodeStreamHello, negotiateStreamHello } from '../dist/index.js';
+import {
+  decodeStreamHello,
+  encodeStreamHello,
+  matchesNativeTcpStreamPreamble,
+  NATIVE_TCP_STREAM_PREAMBLE,
+  negotiateStreamHello,
+} from '../dist/index.js';
 
 function queuePair(split = false) {
   type Waiter = (value: Uint8Array | null) => void;
@@ -67,4 +73,10 @@ test('stream hello timeout does not wait forever on a backpressured write', asyn
       ),
     /timed out/,
   );
+});
+
+test('native TCP-forwarder preamble is fixed-width and application-neutral', () => {
+  assert.equal(matchesNativeTcpStreamPreamble(NATIVE_TCP_STREAM_PREAMBLE), true);
+  assert.equal(matchesNativeTcpStreamPreamble(Uint8Array.of(1, 2, 3)), false);
+  assert.equal(matchesNativeTcpStreamPreamble(NATIVE_TCP_STREAM_PREAMBLE.slice(1)), false);
 });

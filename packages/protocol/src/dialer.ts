@@ -2,7 +2,7 @@
  * Sovereign Apps Protocol — tunnel dialer transport.
  *
  * JSON-message tunnel over an Iroh QUIC bidirectional stream.
- * Same pattern as Music Hub's SovereignIrohDialerTransport.
+ * Dials one peer using a combined direct/relay candidate set.
  */
 
 import { encodeFrame, parseMessage, MAX_FRAME_BYTES } from './framing.js';

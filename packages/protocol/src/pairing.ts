@@ -2,7 +2,7 @@
  * Sovereign Apps Protocol — pairing and authentication types.
  *
  * Defines the QR payload format, fingerprint verification, and capability
- * exchange protocol used in Music Hub's HubPairing + MobileHubClient.
+ * exchange protocol used by the neutral desktop/mobile template.
  *
  * Two-phase handshake:
  *   Phase 1 — QR pairing: desktop displays QR → mobile scans → registers

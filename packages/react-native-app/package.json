@@ -10,6 +10,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./example": {
+      "types": "./dist/App.d.ts",
+      "import": "./dist/App.js"
     }
   },
   "files": [
@@ -32,12 +36,11 @@
   "dependencies": {
     "@sovereign-apps/module-kernel": "workspace:*",
     "@sovereign-apps/protocol": "workspace:*",
-    "react-native": "^0.81.0",
     "react": "^19.1.0",
-    "@gordo-labs/react-native-iroh": "^0.2.0"
+    "react-native": "^0.81.0"
   },
   "peerDependencies": {
-    "@gordo-labs/react-native-iroh": "^0.2.0",
+    "@gordo-labs/react-native-iroh": ">=0.2.0 <1.0.0",
     "react-native-camera-kit": ">=15.0.0"
   },
   "devDependencies": {

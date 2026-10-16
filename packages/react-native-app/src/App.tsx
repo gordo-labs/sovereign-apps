@@ -1,12 +1,7 @@
 /**
  * Sovereign App Template — React Native UI shell with pairing flow.
  *
- * Shows:
- *   - QR scanner (placeholder — real camera integration would use
- *     react-native-camera-kit or similar)
- *   - Manual pairing code entry fallback
- *   - Fingerprint verification prompt
- *   - Connection status, paired devices
+ * Shows a camera scan, fingerprint confirmation, and one-use Iroh pairing.
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -20,16 +15,22 @@ import {
   ScrollView,
   Linking,
 } from 'react-native';
-import { startSovereignPeer, getMessageLog, getNodeId } from './index.js';
+import {
+  startSovereignPeer,
+  getMessageLog,
+  getNodeId,
+  getTransportEndpoint,
+  stopSovereignPeer,
+} from './index.js';
 import { MobilePairingClient, type PairingEvent } from './hub-pairing.js';
 import { PairingQrCamera } from './PairingQrCamera.js';
 
-const PAIRING_INPUT_PLACEHOLDER = 'Paste pairing link or JSON (diagnostic fallback)';
+const PAIRING_INPUT_PLACEHOLDER = 'Paste a pairing link or QR JSON for testing';
 
 export function App(): React.JSX.Element {
-  const [peerId, setPeerId] = useState('');
-  const [addressHint, setAddressHint] = useState('');
-  const [connected, setConnected] = useState(false);
+  const [paired, setPaired] = useState(false);
+  const [transportReady, setTransportReady] = useState(false);
+  const [tcpForwarderStatus, setTcpForwarderStatus] = useState<string | null>(null);
   const [nodeId, setNodeId] = useState<string | null>(null);
   const [messages, setMessages] = useState<string[]>([]);
   const pairingRef = useRef<MobilePairingClient | null>(null);
@@ -52,19 +53,20 @@ export function App(): React.JSX.Element {
       if (event.hubId) setPairingHubId(event.hubId);
       if (event.fingerprint) setPairingFingerprint(event.fingerprint);
       if (event.type === 'paired') {
-        setConnected(true);
+        setPaired(true);
       }
     });
 
     return () => {
       client.reset();
+      void stopSovereignPeer();
     };
   }, []);
 
   // Poll for new messages
   useEffect(() => {
-    void getNodeId().then(setNodeId);
     const interval = setInterval(() => {
+      void getNodeId().then(setNodeId);
       const log = getMessageLog();
       if (log.length > 0) {
         setMessages([...log]);
@@ -73,7 +75,7 @@ export function App(): React.JSX.Element {
     return () => clearInterval(interval);
   }, []);
 
-  // Handle a camera scan, custom sovereign:// link, web link, or diagnostic JSON.
+  // Handle a camera scan, custom sovereign:// link, web link, or test JSON.
   const handlePairingInput = useCallback((value: string) => {
     if (!value.trim()) return;
     const client = pairingRef.current;
@@ -128,9 +130,38 @@ export function App(): React.JSX.Element {
       return;
     }
     try {
-      await startSovereignPeer(candidate);
-      setConnected(true);
-      setPairingLog((prev) => [...prev, '[connected] Secure desktop channel opened']);
+      const grant = await startSovereignPeer(candidate, {
+        sessionRef: client.getSessionRef() ?? undefined,
+      });
+      if (!grant) throw new Error('Desktop did not issue a pairing grant');
+      const mobileNodeId = await getNodeId();
+      if (!mobileNodeId) throw new Error('Could not verify this device Iroh identity');
+      client.acceptIrohGrant(grant, mobileNodeId);
+      setTransportReady(true);
+      setPairingLog((prev) => [
+        ...prev,
+        '[paired] Iroh channel authenticated and one-use pairing grant accepted',
+      ]);
+      try {
+        const endpoint = getTransportEndpoint();
+        if (!endpoint) throw new Error('Iroh endpoint is not available');
+        const forwarder = await endpoint.startTcpForwarder(candidate);
+        setTcpForwarderStatus(
+          `Connected to desktop example service on local port ${forwarder.port}`,
+        );
+        const response = await fetch(`http://127.0.0.1:${forwarder.port}/health`);
+        if (!response.ok)
+          throw new Error(`Desktop example service returned HTTP ${response.status}`);
+        const health = (await response.json()) as { status?: unknown };
+        if (health.status !== 'ok') throw new Error('Desktop example service health check failed');
+        setTcpForwarderStatus(
+          'Secure Iroh TCP forwarder verified against the desktop example service',
+        );
+      } catch (error) {
+        setTcpForwarderStatus(
+          `Optional TCP forwarding unavailable: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     } catch (error) {
       setPairingLog((prev) => [
         ...prev,
@@ -139,29 +170,13 @@ export function App(): React.JSX.Element {
     }
   }, []);
 
-  // Connect to desktop via Iroh
-  const handleConnect = useCallback(async () => {
-    if (!peerId.trim()) return;
-    if (!addressHint.trim()) return;
-    try {
-      await startSovereignPeer({ id: peerId.trim(), kind: 'iroh', address: addressHint.trim() });
-      setConnected(true);
-    } catch (error) {
-      setPairingLog((prev) => [
-        ...prev,
-        `[connect-error] ${error instanceof Error ? error.message : String(error)}`,
-      ]);
-      setConnected(false);
-    }
-  }, [peerId, addressHint]);
-
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Sovereign App</Text>
       <Text style={styles.info}>Node: {nodeId ?? 'starting...'}</Text>
 
       {/* Pairing section */}
-      {!connected ? (
+      {!paired ? (
         <View style={styles.pairingBox}>
           <Text style={styles.section}>Pairing — Initial WiFi Setup</Text>
 
@@ -176,7 +191,7 @@ export function App(): React.JSX.Element {
               <PairingQrCamera onScan={handlePairingInput} onCancel={() => setCameraOpen(false)} />
             </View>
           )}
-          <Text style={styles.label}>Or open a pairing link / enter diagnostic payload:</Text>
+          <Text style={styles.label}>Or open a pairing link / paste a QR payload:</Text>
           <TextInput
             style={styles.input}
             placeholder={PAIRING_INPUT_PLACEHOLDER}
@@ -204,6 +219,12 @@ export function App(): React.JSX.Element {
           <Text style={styles.statusLabel}>
             Status: <Text style={styles.statusValue}>{pairingState}</Text>
           </Text>
+          {transportReady && (
+            <Text style={styles.hint}>
+              Iroh transport is open and the one-use pairing grant was accepted.
+            </Text>
+          )}
+          {tcpForwarderStatus && <Text style={styles.hint}>{tcpForwarderStatus}</Text>}
           {pairingHubId && <Text style={styles.hubLabel}>Hub: {pairingHubId}</Text>}
 
           {/* Pairing log */}
@@ -217,28 +238,12 @@ export function App(): React.JSX.Element {
               <Text style={styles.hint}>Pairing events will appear here...</Text>
             )}
           </View>
-
-          {/* Direct connect fallback */}
-          <View style={{ marginTop: 16 }}>
-            <Text style={styles.section}>Or connect directly via Iroh:</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Peer node id"
-              value={peerId}
-              onChangeText={setPeerId}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Dialable address or endpoint ticket (required)"
-              value={addressHint}
-              onChangeText={setAddressHint}
-            />
-            <Button title="Connect" onPress={handleConnect} />
-          </View>
         </View>
       ) : (
         <View>
-          <Text style={styles.status}>Paired / Connected to {pairingHubId ?? peerId}</Text>
+          <Text style={styles.status}>
+            Pairing grant accepted for {pairingHubId ?? 'desktop peer'}
+          </Text>
         </View>
       )}
 

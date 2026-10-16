@@ -3,24 +3,25 @@
 Updated after the integration pass. “Contract” means compile-time/API coverage;
 runtime and physical evidence are listed separately.
 
-| Capability | Contract | Implemented adapter | Evidence |
-| --- | --- | --- | --- |
-| Identity and key storage | yes | Electron file-backed identity; RN injected secure-store boundary | `electron-app/src/node-key.ts`, `react-native-app/src/secure-store.ts` |
-| Secure grant storage | yes | desktop authority + RN secure-store boundary | `protocol/src/secure-pairing.ts` |
-| Discovery and bootstrap | yes | Electron DNS-SD advertiser; RN browser adapter | `electron-app/src/lan-discovery.ts`, `react-native-app/src/lan-discovery.ts` |
-| Transport endpoint/session/framed stream | yes | Electron real Iroh adapter; RN published bridge adapter | `electron-app/src/iroh-node.ts`, `react-native-app/src/transport-adapter.ts` |
-| Pairing/auth/trust | yes | protocol + desktop authority + RN boundary; contract E2E | `protocol/src/secure-pairing.ts`, `test/e2e/contract.test.mjs` |
-| Route policy and health | yes | deterministic policy package | `packages/route-policy` |
-| App codec/capabilities | yes | no | `module-kernel/src/types.ts` |
-| Diagnostics | yes | no | `module-kernel/src/types.ts` |
-| Composition validation | yes | registry | `module-kernel/test/kernel.test.ts` |
-| Adapter conformance helpers | yes | in-memory tests only | `module-kernel/src/conformance.ts` |
-| LAN mDNS/DNS-SD | target contract | desktop advertise + iOS/Android browse (permission injected) | `protocol/src/lan-discovery.ts` |
-| QR / desktop Iroh / RN Iroh | yes | implemented adapters; real two-node/physical fixture pending | `packages/electron-app`, `packages/react-native-app` |
-| Web presence / Next.js example | yes | framework-neutral package + minimal Next.js example | `packages/web-presence`, `apps/landing` |
-| BLE bootstrap | contract | platform-neutral codec + in-memory adapter only | `packages/ble-bootstrap` |
-| Offline bootstrap | contract | deep-link/file/NFC handoff boundaries + tests | `packages/offline-bootstrap` |
-| Bluetooth framed data | explicitly not supported | no native adapter; no physical matrix | `docs/ADR-015-bluetooth-transport.md` |
+| Capability                               | Contract                 | Implemented adapter                                                                                                 | Evidence                                                                             |
+| ---------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Identity and key storage                 | yes                      | Electron file-backed identity; RN injected secure-store boundary                                                    | `electron-app/src/node-key.ts`, `react-native-app/src/secure-store.ts`               |
+| Secure grant storage                     | yes                      | desktop authority + RN secure-store boundary                                                                        | `protocol/src/secure-pairing.ts`                                                     |
+| Discovery and bootstrap                  | yes                      | Electron DNS-SD advertiser; RN browser adapter                                                                      | `electron-app/src/lan-discovery.ts`, `react-native-app/src/lan-discovery.ts`         |
+| Transport endpoint/session/framed stream | yes                      | Electron real Iroh adapter; RN published bridge adapter                                                             | `electron-app/src/iroh-node.ts`, `react-native-app/src/transport-adapter.ts`         |
+| Pairing/auth/trust                       | yes                      | protocol pieces + desktop authority + RN boundary; contract E2E is in-process only                                  | `protocol/src/secure-pairing.ts`, `test/e2e/contract.test.mjs`                       |
+| Route policy and health                  | yes                      | deterministic policy package                                                                                        | `packages/route-policy`                                                              |
+| App codec/capabilities                   | yes                      | no                                                                                                                  | `module-kernel/src/types.ts`                                                         |
+| Diagnostics                              | yes                      | no                                                                                                                  | `module-kernel/src/types.ts`                                                         |
+| Composition validation                   | yes                      | registry                                                                                                            | `module-kernel/test/kernel.test.ts`                                                  |
+| Adapter conformance helpers              | yes                      | in-memory tests only                                                                                                | `module-kernel/src/conformance.ts`                                                   |
+| LAN mDNS/DNS-SD                          | target contract          | desktop advertise + iOS/Android browse (permission injected)                                                        | `protocol/src/lan-discovery.ts`                                                      |
+| QR / desktop Iroh / RN Iroh              | in-process flow          | Electron QR + RN scan/link + one-use peer-bound grant over framed stream; native hosts and physical fixture pending | `packages/electron-app`, `packages/react-native-app`, `docs/PUBLISHING-READINESS.md` |
+| Local app database                       | no                       | no concrete cross-platform SQLite adapter or initial app schema                                                     | `docs/PUBLISHING-READINESS.md`                                                       |
+| Web presence / Next.js example           | yes                      | framework-neutral package + minimal Next.js example                                                                 | `packages/web-presence`, `apps/landing`                                              |
+| BLE bootstrap                            | contract                 | platform-neutral codec + in-memory adapter only                                                                     | `packages/ble-bootstrap`                                                             |
+| Offline bootstrap                        | contract                 | deep-link/file/NFC handoff boundaries + tests                                                                       | `packages/offline-bootstrap`                                                         |
+| Bluetooth framed data                    | explicitly not supported | no native adapter; no physical matrix                                                                               | `docs/ADR-015-bluetooth-transport.md`                                                |
 
 No row marked “implemented adapter” is promoted to stable-supported until a
 platform-specific agent supplies fresh runtime/physical evidence.

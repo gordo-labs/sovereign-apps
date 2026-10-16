@@ -3,17 +3,18 @@
   "slug": "sovereign-apps",
   "type": "public-app",
   "version": "0.0.1",
-  "description": "Modular monorepo template for sovereign P2P apps — Electron, React Native and optional installable web presence, powered by Iroh QUIC",
+  "description": "Pre-alpha modular component template for desktop/mobile pairing and optional Iroh communication modules",
   "status": "pre-alpha",
   "frequency": "weekly",
-  "lastAction": "2026-08-06T17:48:20Z",
-  "lastActionDescription": "Integrated the modular communication packages, web-presence Next.js example, generator, release gates and native evidence runbook",
+  "lastAction": "2026-10-16T18:36:06Z",
+  "lastActionDescription": "Added the pinned bridge 0.3 mobile host and optional TCP-forwarder example, updated setup/readiness docs, and passed release gates with Node 22",
   "nextNeeds": [
-    "Physical iOS/Android QR-to-auth-to-reconnect/revoke evidence",
-    "Native BLE and platform mDNS permission/runtime adapters",
-    "Signed support manifest from physical iOS/Android evidence, then stable release decision"
+    "Generate bridge 0.3 iOS/Android binaries with Rustup targets and verify host builds",
+    "Run QR-to-grant and TCP-forwarder flow on iOS/Android simulators and physical devices",
+    "Add minimal local database starter and mobile secure-storage adapter",
+    "Run physical pairing, reconnect and revoke evidence"
   ],
-  "blocking": "Automated gates pass, but stable support is blocked by missing physical iOS/Android evidence, native BLE/mDNS runtime measurements, and the skipped real two-node Iroh fixture",
+  "blocking": "The checked-in host pins bridge 0.3 source but native binaries require Rustup cross-compilation targets; successful native host build, device evidence, mobile secure storage, and a local database starter remain open",
   "license": "MIT",
   "repository": {
     "type": "Monorepo (pnpm workspace)",
@@ -38,7 +39,7 @@
   },
   "dependencies": {
     "@momics/iroh-http-node": "^0.6.1 (Electron native module)",
-    "@gordo-labs/react-native-iroh": "^0.2.0 (React Native UniFFI bridge)"
+    "@gordo-labs/react-native-iroh": "0.2.0 on npm; mobile host pins public 0.3.0 source as a submodule"
   },
   "protocol": {
     "alpn": "sovereign-apps/1",

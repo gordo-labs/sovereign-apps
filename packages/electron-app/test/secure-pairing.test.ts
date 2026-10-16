@@ -82,3 +82,21 @@ test('desktop rejects forged session binding and signatures before consuming the
   });
   assert.equal(grant.peerKey, 'mobile-key');
 });
+
+test('desktop issues one grant for the authenticated Iroh peer using the one-use QR secret', () => {
+  const authority = new DesktopPairingAuthority();
+  const qr = authority.createQr({
+    hubId: 'sovereign-app',
+    nodeId: 'desktop-node',
+    desktopPublicKey: 'desktop-key',
+    alpn: 'sovereign-apps/1',
+  }).envelope;
+  const grant = authority.completeScannedPairing(qr.sessionRef, 'authenticated-mobile-node');
+  assert.equal(grant.peerKey, 'authenticated-mobile-node');
+  assert.equal(grant.nodeId, 'authenticated-mobile-node');
+  assert.ok(grant.capabilities.includes('app.read'));
+  assert.throws(
+    () => authority.completeScannedPairing(qr.sessionRef, 'authenticated-mobile-node'),
+    /Unknown or already consumed/,
+  );
+});

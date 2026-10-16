@@ -18,6 +18,28 @@ import {
 export type { IrohBridgeConnection, IrohBridgeSession, IrohConnectTargetOptions, IrohStartOptions };
 export { IrohBridgeError };
 
+export type IrohTcpForwarder = {
+  readonly id: string;
+  readonly port: number;
+  stats(): {
+    activeConnections: number;
+    totalConnections: number;
+    failedStreams: number;
+    bytesUp: number;
+    bytesDown: number;
+    activeDownMs: number;
+  };
+  stop(): Promise<void>;
+  isStopped(): boolean;
+};
+
+export type IrohTcpForwarderOptions = {
+  target: IrohConnectTargetOptions['target'];
+  alpn: string;
+  listenPort?: number;
+  preamble?: Uint8Array;
+};
+
 export type BridgeLike = Pick<
   PublishedIrohBridge,
   | 'bridgeVersion'
@@ -29,7 +51,10 @@ export type BridgeLike = Pick<
   | 'connectTarget'
   | 'openSession'
   | 'openTargetSession'
->;
+> & {
+  /** Added in bridge 0.3; optional while npm's latest release remains 0.2.0. */
+  startTcpForwarder?: (options: IrohTcpForwarderOptions) => Promise<IrohTcpForwarder>;
+};
 
 /** The real npm bridge. Tests and diagnostic builds may inject a BridgeLike. */
 export function getIrohBridge(bridge: BridgeLike = getPublishedIrohBridge()): BridgeLike {

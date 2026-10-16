@@ -1,15 +1,17 @@
 # Sovereign Apps — target architecture
 
-> Target, not current implementation. The public baseline is pre-alpha and does
-> not yet complete this flow. See `AUDIT-2026-08-06.md` and the ordered backlog.
+> Target architecture. The pre-alpha example implements the QR, Iroh and
+> one-use grant path at the framed-stream layer; native-host and device gaps are
+> listed in
+> [PUBLISHING-READINESS.md](./PUBLISHING-READINESS.md).
 
 ## Local-first topology
 
 ```text
-┌──────────────────┐    authenticated Iroh framed streams    ┌──────────────────┐
-│ Electron desktop │ ◄──────────────────────────────────────► │ React Native app │
-│ responder        │       direct LAN or optional relay       │ outbound dialer  │
-└────────┬─────────┘                                          └────────┬─────────┘
+┌──────────────────┐       mobile opens QUIC session        ┌──────────────────┐
+│ Electron desktop │ ◄────────────────────────────────────── │ React Native app │
+│ responder        │       bidirectional streams             │ outbound dialer  │
+└────────┬─────────┘                                        └────────┬─────────┘
          │                                                             │
          ├──── QR / deep link / file ───────── bootstrap ───────────────┤
          ├──── mDNS/DNS-SD ─────────── untrusted LAN discovery ─────────┤
@@ -21,20 +23,25 @@
          └──────────────────────────────────────────────────────────────┘
 ```
 
-The local QR + direct Iroh path must work without the web-presence module. A
-relay or presence helper is a fallback/rendezvous option, not an authority.
+The local QR + direct Iroh path works without the web-presence module. A relay
+or presence helper is an optional reachability/rendezvous mechanism, not an
+authority. The current Electron and React Native examples exchange a short-
+lived one-use QR reference over the encrypted Iroh channel and bind the grant
+to the authenticated transport peer. Native host/device verification remains
+pending.
 
 ## Module boundaries
 
-| Layer | Responsibility | Initial adapters |
-| --- | --- | --- |
-| Identity/storage | App key, Iroh key, peer grants, secure persistence | desktop files, Keychain/Keystore |
-| Discovery | Find untrusted candidate records | mDNS, optional web presence |
-| Bootstrap | Transfer bounded pairing/candidate material | QR; later BLE/NFC/deep-link/file |
-| Transport | Endpoint, session and framed byte streams | Iroh Node, published RN Iroh bridge |
-| Pairing/auth | Bind user intent and peer identities; issue/revoke grants | neutral transcript protocol |
-| Route policy | Rank/race candidates; reconnect/fallback without auth downgrade | direct Iroh then configured fallback |
-| App codec | Application-owned messages/capabilities | removable example only |
+| Layer            | Responsibility                                                  | Initial adapters                                                         |
+| ---------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Identity/storage | App key, Iroh key, peer grants, secure persistence              | Electron file adapter; RN secure-storage boundary (host adapter pending) |
+| Discovery        | Find untrusted candidate records                                | mDNS, optional web presence                                              |
+| Bootstrap        | Transfer bounded pairing/candidate material                     | QR; later BLE/NFC/deep-link/file                                         |
+| Transport        | Endpoint, session and framed byte streams                       | Iroh Node, published RN Iroh bridge                                      |
+| Pairing/auth     | Bind user intent and peer identities; issue/revoke grants       | neutral transcript protocol pieces; host integration pending             |
+| App database     | Application-owned local state                                   | no concrete SQLite adapter/schema shipped yet                            |
+| Route policy     | Rank/race candidates; reconnect/fallback without auth downgrade | direct Iroh then configured fallback                                     |
+| App codec        | Application-owned messages/capabilities                         | removable example only                                                   |
 
 No discovery or bootstrap adapter grants trust. No transport adapter interprets
 application payloads. Capability identifiers are bounded, opaque strings owned
@@ -46,18 +53,20 @@ dependents; optional modules are reported as degraded without falsifying core
 readiness. Adapters own their resources and must pass lifecycle/cancellation
 conformance before they are usable by platform packages.
 
-## Initial pairing flow
+## Intended initial pairing flow
 
 ```text
 Desktop creates one-time expiring pairing session
-  → renders standard QR + app fingerprint
+  → renders QR with the desktop identity, available bootstrap address and
+    one-time pairing material
   → mobile validates/scans envelope
   → user confirms peer/fingerprint
-  → mobile dials advertised Iroh node with matching ALPN + usable hint
-  → both sides authenticate a transcript binding app keys, Iroh node, nonces,
-    version, expiry and requested/granted opaque capabilities
-  → desktop issues rotating revocable grant
-  → only then are application envelopes delivered
+  → mobile builds one typed endpoint target from the QR bootstrap address
+  → mobile bridge starts its endpoint and dials the desktop responder
+  → mobile proves possession of the one-use QR reference on the encrypted
+    Iroh stream; Electron checks it against the authenticated peer ID
+  → desktop issues a short-lived grant bound to that peer
+  → only then should application envelopes be delivered
 ```
 
 Reconnect uses the stored peer identity and grant. Revocation must prevent a
@@ -66,13 +75,25 @@ previously paired device from reconnecting.
 ## Iroh stream contract
 
 - Desktop uses the supported `@momics/iroh-http-node` API.
-- Mobile uses public `@gordo-labs/react-native-iroh@0.2.0` via
-  `getIrohBridge()`, `start`, `connect`/`openSession` and `stop`.
-- Mobile is an outbound dialer in bridge `0.2.0`; the architecture must not claim
-  an incoming mobile listener.
-- The native RN bridge already exposes length-framed messages. The protocol must
-  define when raw Node streams need the 4-byte big-endian framing layer so a
-  payload is never double-framed.
+- Mobile's current package dependency is published
+  `@gordo-labs/react-native-iroh@0.2.0` via
+  `getIrohBridge()`, `start`, `connectTarget` / `openTargetSession` and `stop`.
+- Public bridge source `0.3.0` has native loopback TCP forwarding and async
+  dial diagnostics, but npm still resolves to `0.2.0`. This template does not
+  yet use the 0.3 forwarder.
+- Mobile is an outbound dialer; the desktop hosts the incoming responder. Data
+  flows in both directions after the session opens.
+- Prefer one typed target carrying all direct addresses plus the relay URL, or
+  one official endpoint ticket. This allows Iroh to select paths within one
+  dial instead of discarding NAT state between attempts.
+- The RN bridge owns length-prefix framing on mobile; the Electron adapter owns
+  matching framing around raw Node streams. Do not double-frame app payloads.
+- An optional HTTP data plane can use bridge `startTcpForwarder()` to turn
+  loopback TCP into independent QUIC streams; Electron needs a matching
+  extra-stream receiver. This is not included in the current framed-message
+  example.
+- The native bridge moves bytes only. Pairing, authorization, persistence and
+  app-level session policy remain host responsibilities.
 - Frames are bounded, runtime validated and subject to backpressure/cancellation.
 
 ## Installable web presence
@@ -104,13 +125,13 @@ route aliases or a product landing page.
 
 ## Planned channel semantics
 
-| Channel | Role | Trust | External infrastructure |
-| --- | --- | --- | --- |
-| QR | Bootstrap | Requires authenticated transcript | None |
-| mDNS/Wi-Fi LAN | Discovery/candidate hint | Untrusted | None |
-| Iroh direct | Data transport | Bound by pairing/auth | None when directly reachable |
-| Iroh relay | Data fallback | Bound by pairing/auth | Relay required |
-| Web presence | Discovery/signaling fallback | Untrusted signed cache | Optional server |
-| BLE | Nearby bootstrap first | Untrusted until pairing | None |
-| Bluetooth data | Not shipped; bootstrap-only until ADR-015 exit criteria pass | N/A | N/A |
-| NFC/deep-link/file | Offline bootstrap handoff | Untrusted until pairing | None |
+| Channel            | Role                                                         | Trust                             | External infrastructure      |
+| ------------------ | ------------------------------------------------------------ | --------------------------------- | ---------------------------- |
+| QR                 | Bootstrap                                                    | Requires authenticated transcript | None                         |
+| mDNS/Wi-Fi LAN     | Discovery/candidate hint                                     | Untrusted                         | None                         |
+| Iroh direct        | Data transport                                               | Bound by pairing/auth             | None when directly reachable |
+| Iroh relay         | Data fallback                                                | Bound by pairing/auth             | Relay required               |
+| Web presence       | Discovery/signaling fallback                                 | Untrusted signed cache            | Optional server              |
+| BLE                | Nearby bootstrap first                                       | Untrusted until pairing           | None                         |
+| Bluetooth data     | Not shipped; bootstrap-only until ADR-015 exit criteria pass | N/A                               | N/A                          |
+| NFC/deep-link/file | Offline bootstrap handoff                                    | Untrusted until pairing           | None                         |

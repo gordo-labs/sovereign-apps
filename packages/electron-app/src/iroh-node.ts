@@ -15,10 +15,17 @@ export type EndpointState = 'starting' | 'ready' | 'unavailable' | 'error' | 'cl
 export type IrohCandidate =
   { kind: 'direct'; address: string } | { kind: 'relay'; address: string };
 
+export type IrohExtraStream = {
+  readonly readable: ReadableStream<Uint8Array>;
+  readonly writable: WritableStream<Uint8Array>;
+};
+
 export interface IrohDuplexConnection {
   readonly peerId: string;
   send(data: Uint8Array): Promise<void>;
   onMessage(handler: (data: Uint8Array) => void): () => void;
+  /** Receive extra QUIC streams opened by an authenticated paired peer. */
+  onExtraStream(handler: (stream: IrohExtraStream) => void | Promise<void>): () => void;
   onClose(handler: (error?: Error) => void): () => void;
   close(): Promise<void>;
 }
@@ -238,11 +245,15 @@ export class ElectronIrohNode implements IrohNode {
 class FramedIrohConnection implements IrohDuplexConnection {
   readonly peerId: string;
   private readonly handlers = new Set<(data: Uint8Array) => void>();
+  private readonly extraStreamHandlers = new Set<
+    (stream: IrohExtraStream) => void | Promise<void>
+  >();
   private readonly closeHandlers = new Set<(error?: Error) => void>();
   private readonly decoder: FrameDecoder;
   private readonly maxFrameBytes: number;
   private readonly reader: ReadableStreamDefaultReader<Uint8Array>;
   private readonly writer: WritableStreamDefaultWriter<Uint8Array>;
+  private readonly extraReader?: ReadableStreamDefaultReader<IrohExtraStream>;
   private writeChain = Promise.resolve();
   private closed = false;
 
@@ -258,6 +269,15 @@ class FramedIrohConnection implements IrohDuplexConnection {
     this.maxFrameBytes = maxFrameBytes;
     this.reader = reader;
     this.writer = writer;
+    const incoming = (
+      session as NativeSession & {
+        incomingBidirectionalStreams?: ReadableStream<IrohExtraStream>;
+      }
+    ).incomingBidirectionalStreams;
+    if (incoming) {
+      this.extraReader = incoming.getReader();
+      void this.readExtraStreams();
+    }
     void this.readLoop();
     void session.closed
       .then(() => this.markClosed())
@@ -303,6 +323,11 @@ class FramedIrohConnection implements IrohDuplexConnection {
     return () => this.handlers.delete(handler);
   }
 
+  onExtraStream(handler: (stream: IrohExtraStream) => void | Promise<void>): () => void {
+    this.extraStreamHandlers.add(handler);
+    return () => this.extraStreamHandlers.delete(handler);
+  }
+
   onClose(handler: (error?: Error) => void): () => void {
     this.closeHandlers.add(handler);
     return () => this.closeHandlers.delete(handler);
@@ -314,6 +339,7 @@ class FramedIrohConnection implements IrohDuplexConnection {
     await this.writeChain.catch(() => undefined);
     await this.writer.close().catch(() => undefined);
     await this.reader.cancel().catch(() => undefined);
+    await this.extraReader?.cancel().catch(() => undefined);
     this.session.close({ closeCode: 0, reason: 'closed' });
   }
 
@@ -333,11 +359,35 @@ class FramedIrohConnection implements IrohDuplexConnection {
     this.markClosed();
   }
 
+  private async readExtraStreams(): Promise<void> {
+    if (!this.extraReader) return;
+    try {
+      while (!this.closed) {
+        const { value, done } = await this.extraReader.read();
+        if (done) break;
+        const handler = this.extraStreamHandlers.values().next().value as
+          ((stream: IrohExtraStream) => void | Promise<void>) | undefined;
+        if (!handler) {
+          await value.writable.abort().catch(() => undefined);
+          await value.readable.cancel().catch(() => undefined);
+          continue;
+        }
+        void Promise.resolve(handler(value)).catch(async () => {
+          await value.writable.abort().catch(() => undefined);
+          await value.readable.cancel().catch(() => undefined);
+        });
+      }
+    } catch (error) {
+      if (!this.closed) this.markClosed(asError(error));
+    }
+  }
+
   private markClosed(error?: Error): void {
     if (this.closed) return;
     this.closed = true;
     for (const handler of this.closeHandlers) handler(error);
     this.handlers.clear();
+    this.extraStreamHandlers.clear();
     this.closeHandlers.clear();
   }
 }

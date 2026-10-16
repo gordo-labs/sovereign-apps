@@ -1,7 +1,7 @@
 /**
  * Sovereign Apps Protocol — core types.
  *
- * Matches the minimal Iroh surface used in Music Hub's sovereign networking:
+ * Matches the minimal Iroh surface used by the sovereign networking modules:
  *   - @momics/iroh-http-node (Electron desktop)
  *   - rust/iroh_mobile_bridge (React Native via UniFFI)
  */
