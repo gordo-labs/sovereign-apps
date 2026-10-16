@@ -42,3 +42,6 @@ pass.
 
 The local `working/` directory is intentionally excluded from Git. Public
 installation and contribution guidance is in the tracked `docs/` tree.
+The atomic V1 completion tasks, dependencies, and acceptance checks are listed
+in the [root README](../README.md#v1-delivery-backlog) and expanded in the
+[V1 roadmap](./ROADMAP.md).

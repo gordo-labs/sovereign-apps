@@ -75,12 +75,10 @@ previously paired device from reconnecting.
 ## Iroh stream contract
 
 - Desktop uses the supported `@momics/iroh-http-node` API.
-- Mobile's current package dependency is published
-  `@gordo-labs/react-native-iroh@0.2.0` via
-  `getIrohBridge()`, `start`, `connectTarget` / `openTargetSession` and `stop`.
-- Public bridge source `0.3.0` has native loopback TCP forwarding and async
-  dial diagnostics, but npm still resolves to `0.2.0`. This template does not
-  yet use the 0.3 forwarder.
+- The reusable React Native package keeps the bridge behind
+  `getIrohBridge()`, `start`, typed target/session operations and `stop`.
+  `apps/mobile` pins public bridge source `0.3.0` as a Git submodule because
+  npm still resolves to `0.2.0`.
 - Mobile is an outbound dialer; the desktop hosts the incoming responder. Data
   flows in both directions after the session opens.
 - Prefer one typed target carrying all direct addresses plus the relay URL, or
@@ -88,10 +86,10 @@ previously paired device from reconnecting.
   dial instead of discarding NAT state between attempts.
 - The RN bridge owns length-prefix framing on mobile; the Electron adapter owns
   matching framing around raw Node streams. Do not double-frame app payloads.
-- An optional HTTP data plane can use bridge `startTcpForwarder()` to turn
-  loopback TCP into independent QUIC streams; Electron needs a matching
-  extra-stream receiver. This is not included in the current framed-message
-  example.
+- The optional HTTP sample uses bridge `startTcpForwarder()` plus Electron's
+  matching extra-stream receiver and a loopback-only `/health` endpoint after
+  the pairing grant. Contract tests exist; native artifacts and device-level
+  verification remain open.
 - The native bridge moves bytes only. Pairing, authorization, persistence and
   app-level session policy remain host responsibilities.
 - Frames are bounded, runtime validated and subject to backpressure/cancellation.

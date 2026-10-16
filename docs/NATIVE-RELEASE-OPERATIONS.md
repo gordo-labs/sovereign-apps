@@ -18,10 +18,11 @@ The machine-readable source of truth is [`release/support-matrix.json`](../relea
 | FreeBSD/other desktop | unsupported | no pinned native artifact or runner | never silently promoted |
 | Browser as a QUIC endpoint | experimental | web presence can publish bounded signed records only | not a transport claim |
 
-The current React Native package has no checked-in `ios/` or `android/` host in
-this template. The native build runner must therefore record `blocked` and the
-manifest must remain red until an adopter supplies the host and its pinned
-toolchain. A skipped job is not evidence.
+The checked-in `apps/mobile` host now supplies iOS and Android project shells,
+but the pinned bridge 0.3 platform artifacts still need reproducible generation
+and native builds. Until the native CI and physical cases pass, record those
+rows as blocked or pending evidence; the existence of a project shell or a
+skipped job is not a passing result.
 
 ## Pinned toolchain
 
@@ -29,8 +30,8 @@ toolchain. A skipped job is not evidence.
 - Electron native dependency `@momics/iroh-http-node` `0.6.1`; do not let an
   optional-platform install silently change the lockfile.
 - iOS: Xcode version and macOS image are declared by the self-hosted runner;
-  Ruby/Bundler and CocoaPods versions must be committed in `Gemfile.lock` once
-  the native host is added. Run `bundle exec pod install` from the iOS host.
+  pin Ruby/Bundler and CocoaPods in `apps/mobile/Gemfile.lock` as part of the V1
+  host-build task. Run `bundle exec pod install` from the iOS host.
 - Android: JDK, Gradle wrapper, Android Gradle Plugin, compile/target SDK and
   NDK are declared by the native host. Use the wrapper (`./gradlew`), never a
   globally selected Gradle version.
