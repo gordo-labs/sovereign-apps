@@ -11,7 +11,7 @@ contract tests but has not been verified on physical iOS/Android hosts.
 ### Verified state
 
 - GitHub: <https://github.com/gordo-labs/sovereign-apps>, public `main`.
-- Current branch: `codex/stabilize-sovereign-apps`; public remote is
+- Current branch: `gordo/stabilize-sovereign-apps`; public remote is
   <https://github.com/gordo-labs/sovereign-apps>.
 - The `working/` folder is intentionally local-only and ignored. Public docs and
   contribution guidance are self-contained under the repository's `docs/` tree.
@@ -92,3 +92,11 @@ SA-012 now supplies the native support matrix, sanitized evidence schema,
 operator runbook, and cross-OS workflow. Physical iOS/Android and native
 artifact evidence are intentionally still blocking; see
 [`docs/NATIVE-RELEASE-OPERATIONS.md`](docs/NATIVE-RELEASE-OPERATIONS.md).
+
+Relay self-hosting and custom-only relay profiles are now specified as V1 PRs
+V1-14–V1-17; the current host adapters do not yet support a complete custom-
+only profile. An optional local-AI MCP server is documented as a post-V1,
+selectable module with scoped authorization and six PR-sized tasks; no MCP
+runtime is implemented or shipped. See
+[`docs/RELAY-OPERATIONS.md`](docs/RELAY-OPERATIONS.md) and
+[`docs/MCP-INTEGRATION.md`](docs/MCP-INTEGRATION.md).

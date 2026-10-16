@@ -8,6 +8,8 @@
 | Historical baseline audit                  | [docs/AUDIT-2026-08-06.md](./docs/AUDIT-2026-08-06.md)                                                                                  |
 | Intended architecture                      | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)                                                                                          |
 | Public roadmap                             | [docs/ROADMAP.md](./docs/ROADMAP.md)                                                                                                    |
+| Iroh relay architecture and self-hosting   | [docs/RELAY-OPERATIONS.md](./docs/RELAY-OPERATIONS.md)                                                                                   |
+| Optional local AI / MCP module             | [docs/MCP-INTEGRATION.md](./docs/MCP-INTEGRATION.md)                                                                                     |
 | Native release operations                  | [docs/NATIVE-RELEASE-OPERATIONS.md](./docs/NATIVE-RELEASE-OPERATIONS.md) + [release/support-matrix.json](./release/support-matrix.json) |
 
 Source ownership:
@@ -19,6 +21,8 @@ Source ownership:
   intentionally not a marketing landing)
 - installable web presence: `packages/web-presence/` framework-neutral package
   plus Next.js adapter and example routes
+- planned optional MCP server: desktop-local adapter over app-owned services;
+  not implemented or shipped
 
 The `working/` folder is local-only and intentionally absent from the public
 Git history. Public documentation must not link to it.

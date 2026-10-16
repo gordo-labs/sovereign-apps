@@ -113,10 +113,10 @@ This is the detailed companion to the [V1 backlog in the root README](../README.
 
 **Done when:** pairing/auth and local data-flow docs match the code; all public modules state guarantees and non-goals; dependency/license audit findings are resolved or documented; `release/support-matrix.json` reflects only tested claims; fresh required physical evidence exists for both mobile platforms; all release gates pass from a clean clone; maintainers explicitly approve the `1.0.0` release checklist.
 
-**Dependencies:** V1-05, V1-06, V1-07, V1-10, V1-11 and V1-12. The optional V1-08/V1-09 stream-forwarder work is not a core V1 release blocker.
+**Dependencies:** V1-05, V1-06, V1-07, V1-10, V1-11, V1-12, V1-14, V1-15, V1-16 and V1-17. The optional V1-08/V1-09 stream-forwarder work is not a core V1 release blocker.
 
 ## V1 release boundary
 
-V1 means a reproducibly buildable Electron + iOS + Android starter with QR/deep-link pairing, user-confirmed desktop identity, authenticated bidirectional application messages, secure grant persistence and revocation, a minimal local database example, and a generator that can omit optional modules. Only platforms with fresh evidence may be advertised as supported.
+V1 means a reproducibly buildable Electron + iOS + Android starter with QR/deep-link pairing, user-confirmed desktop identity, authenticated bidirectional application messages, secure grant persistence and revocation, a minimal local database example, a generator that can omit optional modules, and a verified option for adopters to use their own Iroh relay without silent public-relay fallback. Only platforms with fresh evidence may be advertised as supported.
 
 Web presence, BLE/offline bootstrap, Bluetooth data transport, and node-to-node examples remain optional modules. They are not prerequisites for desktop-to-mobile V1; Bluetooth data transport remains explicitly unsupported until its separate ADR exit criteria and physical evidence are satisfied.

@@ -65,7 +65,10 @@ desktop build case for every desktop row:
 3. **Direct Wi-Fi** — place both devices on the same LAN, observe discovery,
    verify the authenticated direct route, and record route class only.
 4. **Relay** — disable direct reachability without changing trust, verify the
-   Iroh relay route, and verify the same authorization is retained.
+   Iroh relay route, and verify the same authorization is retained. For the V1
+   custom-relay criterion, run this case through an adopter-managed relay with
+   custom-only profiles on both endpoints; the separate custom-relay proof
+   must also show no fallback to public relays or n0 discovery.
 5. **Network transition** — move Wi-Fi↔cellular or between LANs; verify route
    re-selection and reconnect without a second trust grant.
 6. **Background/foreground** — background the phone for the supported interval,

@@ -37,6 +37,18 @@ native archive and `/health` flow could not be built or tested here. The npm
 it as a fallback. Physical iOS/Android verification remains required. Keep
 `dialDiagnostics()` diagnostic-only; it must not gate pairing.
 
+## Relay configuration status
+
+The pinned React Native bridge currently starts its endpoint with
+`RelayMode::Default`; `connectTarget` can include a peer's relay URL, but the
+bridge API does not yet expose a startup custom relay map. The Electron native
+dependency accepts custom relay URLs, but the Sovereign Electron adapter
+currently passes only the mode, not the URL list. Therefore this template
+cannot yet claim a custom-only/self-hosted relay setup or prove that no public
+relay/discovery service was used. The required API and integration tasks are
+defined in [`RELAY-OPERATIONS.md`](./RELAY-OPERATIONS.md). Do not treat adding a
+URL to the QR alone as configuration of both Iroh endpoints.
+
 ## Address and trust rules
 
 The mobile adapter combines usable direct addresses and a relay URL for one

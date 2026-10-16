@@ -23,12 +23,15 @@
          └──────────────────────────────────────────────────────────────┘
 ```
 
-The local QR + direct Iroh path works without the web-presence module. A relay
-or presence helper is an optional reachability/rendezvous mechanism, not an
-authority. The current Electron and React Native examples exchange a short-
-lived one-use QR reference over the encrypted Iroh channel and bind the grant
-to the authenticated transport peer. Native host/device verification remains
-pending.
+The local QR + direct Iroh path works without web presence or a relay. Across
+hard NATs, Iroh can use a relay for connectivity assistance or encrypted packet
+forwarding. A relay is transport infrastructure, not the app backend,
+discovery directory or authorization authority. Custom relay operation and
+custom-only endpoint configuration are described in
+[`RELAY-OPERATIONS.md`](./RELAY-OPERATIONS.md) and remain V1 work. The current
+Electron and React Native examples exchange a short-lived one-use QR reference
+over the encrypted Iroh channel and bind the grant to the authenticated
+transport peer. Native host/device verification remains pending.
 
 ## Module boundaries
 
@@ -40,12 +43,23 @@ pending.
 | Transport        | Endpoint, session and framed byte streams                       | Iroh Node, published RN Iroh bridge                                      |
 | Pairing/auth     | Bind user intent and peer identities; issue/revoke grants       | neutral transcript protocol pieces; host integration pending             |
 | App database     | Application-owned local state                                   | no concrete SQLite adapter/schema shipped yet                            |
-| Route policy     | Rank/race candidates; reconnect/fallback without auth downgrade | direct Iroh then configured fallback                                     |
+| Route policy     | Rank/race candidates; reconnect/fallback without auth downgrade | direct Iroh then the endpoint's configured public/custom relay profile    |
 | App codec        | Application-owned messages/capabilities                         | removable example only                                                   |
+| MCP adapter      | Optionally expose allowlisted app capabilities to local AI       | planned module; no MCP server is shipped                                  |
 
 No discovery or bootstrap adapter grants trust. No transport adapter interprets
 application payloads. Capability identifiers are bounded, opaque strings owned
 by the generated application.
+
+The optional MCP adapter sits above the app-service and capability boundary; it
+does not replace pairing, app authorization, or transport. A local AI client
+must be approved separately from the desktop↔mobile pairing and receive a
+scoped, revocable grant. If a tool invokes a mobile-owned service, the request
+uses the existing paired Iroh channel and the mobile validates the capability
+again. The first design uses stdio locally; an authenticated loopback
+Streamable HTTP adapter is optional. See
+[`MCP-INTEGRATION.md`](./MCP-INTEGRATION.md) for the trust model, threat
+boundaries and PR-sized tasks. MCP is not a core V1 pairing gate.
 
 The `@sovereign-apps/module-kernel` package codifies these boundaries as public
 root exports. Its registry preflights composition and starts dependencies before

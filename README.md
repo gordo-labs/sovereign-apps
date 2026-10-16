@@ -52,6 +52,7 @@ guide](apps/mobile/README.md) and [bridge integration notes](docs/BRIDGE-INTEGRA
 | `@sovereign-apps/electron-app`     | Desktop Iroh endpoint and pairing example                  | Displays a live bootstrap QR, accepts a mobile request, consumes its session and issues a grant |
 | `@sovereign-apps/react-native-app` | Mobile QR client and Iroh bridge adapter                   | Scans/opens pairing data, verifies fingerprint, dials desktop and accepts a peer-bound grant    |
 | `@sovereign-apps/web-presence`     | Installable signed-presence helper with framework adapters | Framework-neutral core plus Next.js route factories                                             |
+| `@sovereign-apps/mcp-server`       | Optional MCP adapter for app-owned capabilities            | Planned; not implemented or shipped. See [MCP architecture and tasks](./docs/MCP-INTEGRATION.md) |
 | `apps/landing`                     | Minimal host integration for `web-presence`                | Neutral Next.js web-presence example, not a product/marketing landing                           |
 
 ## Target architecture
@@ -74,6 +75,24 @@ The React Native bridge is an outbound dialer; there is no mobile incoming
 server mode. See the [bridge integration contract](./docs/BRIDGE-INTEGRATION.md).
 Node-to-node transport is an optional composable module, not a prerequisite for
 the initial desktop/mobile flow.
+
+An MCP server is another optional module above the app-service/capability
+boundary, not a transport or a pairing authority. The local AI host must be
+approved separately and receive narrowly scoped, revocable capabilities; it
+must never receive Iroh identity keys or the mobile pairing grant. See the
+[MCP architecture and PR-sized plan](./docs/MCP-INTEGRATION.md). This is a
+planned module and is not a V1 pairing-release blocker.
+
+### Relay role and self-hosting
+
+The Iroh relay is a fallback/rendezvous transport service, not the app's
+backend, identity provider, or pairing authority. Self-hosting lets an adopter
+control the relay URL, availability, access policy and metadata exposure, but
+does not make relayed packets readable or authorize peers. The template's
+current adapters do not yet provide a complete custom-only relay profile, so a
+QR that contains a custom relay URL alone does not prove that public relays or
+discovery were avoided. See [relay architecture and the self-hosting
+plan](./docs/RELAY-OPERATIONS.md).
 
 ## Current validation
 
@@ -109,7 +128,11 @@ listed.
 | [V1-10](./docs/ROADMAP.md#v1-10-minimal-local-database) | Add one small, versioned SQLite starter for non-secret app data and paired-peer metadata. | V1-04 | Fresh install and migrations work on Electron, iOS, and Android; tests cover upgrade/rollback policy; identity keys and grants remain in secure storage. |
 | [V1-11](./docs/ROADMAP.md#v1-11-selectable-project-generator) | Extend `create-sovereign-app` to produce a neutral desktop/mobile starter with individually selectable optional modules. | V1-02, V1-03, V1-10 | A generated project installs and builds from a clean temp directory; omitted modules leave no imports, permissions, or dependencies; generated output contains no product-specific copy. |
 | [V1-12](./docs/ROADMAP.md#v1-12-clean-clone-and-ci-gates) | Turn the documented setup into a repeatable clean-clone check and platform CI build gates. | V1-01–V1-03, V1-11 | CI verifies frozen install, all repository gates, generator smoke test, iOS simulator build and Android emulator build; blocked physical tests remain explicitly blocked, never silently skipped. |
-| [V1-13](./docs/ROADMAP.md#v1-13-security-and-v1-release-review) | Complete the security, support-matrix, API, license and release-readiness review. | V1-05–V1-07, V1-10–V1-12 | Threat model and API/module docs match behavior; dependency/license audit is clean or exceptions documented; all required support evidence is fresh; release checklist passes before `1.0.0`. |
+| [V1-13](./docs/ROADMAP.md#v1-13-security-and-v1-release-review) | Complete the security, support-matrix, API, license and release-readiness review. | V1-05–V1-07, V1-10–V1-12, V1-14–V1-17 | Threat model and API/module docs match behavior; dependency/license audit is clean or exceptions documented; self-hosted relay and mobile support evidence is fresh; release checklist passes before `1.0.0`. |
+| [V1-14](./docs/RELAY-OPERATIONS.md#v1-14--custom-relay-api-in-the-react-native-bridge) | Add an explicit custom relay map/profile to the pinned React Native bridge in its upstream repository. | — | Versioned native/JS API supports default/custom/disabled modes, validates custom relay URLs, and proves custom-only never silently resolves to Iroh's default relay set. |
+| [V1-15](./docs/RELAY-OPERATIONS.md#v1-15--relay-profiles-in-the-sovereign-host-adapters) | Expose matching relay profiles in Electron and React Native host adapters. | V1-14 | Both hosts pass a typed profile to native endpoints; custom requires an explicit non-empty URL list; pairing address carries the intended relay; no secrets are hard-coded. |
+| [V1-16](./docs/RELAY-OPERATIONS.md#v1-16--version-pinned-self-host-relay-kit) | Add a minimal, version-pinned `iroh-relay` deployment example and operator runbook. | — | Config/image version is validated; TLS, ports, health, private metrics, limits/access policy, upgrades and rollback are documented; no credentials or product-specific URL is committed. |
+| [V1-17](./docs/RELAY-OPERATIONS.md#v1-17--custom-relay-end-to-end-proof) | Prove two app hosts pair and exchange data using only an adopter-managed relay. | V1-02, V1-03, V1-05, V1-14–V1-16 | Repeatable tests cover custom relay route, direct route, relay-only case, outage behavior and no-public-relay/no-n0-discovery proof; iOS/Android evidence is sanitized. |
 
 ### V1 exit criteria
 
@@ -117,18 +140,36 @@ Call the repository v1 only when a clean checkout can build the declared
 Electron, iOS and Android hosts; QR scan and deep link both complete
 fingerprint-confirmed pairing, authenticated bidirectional application
 messages, reconnect and revoke; secure storage and the starter database work;
-the generator can omit optional modules; and the required support/evidence and
-security gates pass. Only platforms with fresh evidence may be called
-supported. Web presence, BLE/offline bootstrap, Bluetooth data transport and
-node-to-node examples remain optional modules and are not blockers for this
-desktop-to-mobile v1.
+the generator can omit optional modules; an adopter can configure and verify a
+self-hosted custom relay without accidental public-relay fallback; and the
+required support/evidence and security gates pass. Only platforms with fresh
+evidence may be called supported. Web presence, BLE/offline bootstrap,
+Bluetooth data transport, multi-region relay failover and node-to-node
+examples remain optional modules and are not blockers for this desktop-to-
+mobile v1.
 
 To contribute, open one PR per V1 ID, include that ID in the PR title, implement
 only its stated scope, and attach its acceptance evidence. V1-08 and V1-09 are
 optional and do not block the core desktop/mobile v1. Start branches with
 `gordo/` when working in this repository; fork contributors can use their own
 branch naming. The detailed task cards and shared evidence rules are in the
-[V1 roadmap](./docs/ROADMAP.md).
+[V1 roadmap](./docs/ROADMAP.md), with the relay-specific cards in
+[relay operations](./docs/RELAY-OPERATIONS.md).
+
+### Optional post-V1 module: local AI / MCP
+
+This is a separate track, not a V1 pairing gate. Each ID is intended as a
+focused PR; [MCP integration](./docs/MCP-INTEGRATION.md) contains acceptance
+criteria, security boundaries and copyable agent prompts.
+
+| ID | Atomic PR scope |
+| --- | --- |
+| MCP-01 | Define and test the app capability registry and MCP tool/resource contract. |
+| MCP-02 | Add explicit local AI-client approval and scoped, revocable grants. |
+| MCP-03 | Build the optional stdio server and minimal read-only app tools. |
+| MCP-04 | If needed, add authenticated Streamable HTTP bound to loopback by default. |
+| MCP-05 | Route a scoped MCP capability to mobile-owned services over paired Iroh. |
+| MCP-06 | Make MCP selectable in the generator and complete security/operator docs. |
 
 ## Architecture
 
