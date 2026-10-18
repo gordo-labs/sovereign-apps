@@ -16,12 +16,12 @@ runtime and physical evidence are listed separately.
 | Composition validation                   | yes                      | registry                                                                                                            | `module-kernel/test/kernel.test.ts`                                                  |
 | Adapter conformance helpers              | yes                      | in-memory tests only                                                                                                | `module-kernel/src/conformance.ts`                                                   |
 | LAN mDNS/DNS-SD                          | target contract          | desktop advertise + iOS/Android browse (permission injected)                                                        | `protocol/src/lan-discovery.ts`                                                      |
-| QR / desktop Iroh / RN Iroh              | in-process flow          | Electron QR + RN scan/link + one-use peer-bound grant over framed stream; native hosts and physical fixture pending | `packages/electron-app`, `packages/react-native-app`, `docs/PUBLISHING-READINESS.md` |
-| Local app database                       | no                       | no concrete cross-platform SQLite adapter or initial app schema                                                     | `docs/PUBLISHING-READINESS.md`                                                       |
+| QR / desktop Iroh / RN Iroh              | in-process flow          | Electron QR + RN scan/link + one-use peer-bound grant over framed stream; native hosts and physical fixture pending | `packages/electron-app`, `packages/react-native-app`, `docs/operations/PUBLISHING-READINESS.md` |
+| Local app database                       | no                       | no concrete cross-platform SQLite adapter or initial app schema                                                     | `docs/operations/PUBLISHING-READINESS.md`                                                       |
 | Web presence / Next.js example           | yes                      | framework-neutral package + minimal Next.js example                                                                 | `packages/web-presence`, `apps/landing`                                              |
 | BLE bootstrap                            | contract                 | platform-neutral codec + in-memory adapter only                                                                     | `packages/ble-bootstrap`                                                             |
 | Offline bootstrap                        | contract                 | deep-link/file/NFC handoff boundaries + tests                                                                       | `packages/offline-bootstrap`                                                         |
-| Bluetooth framed data                    | explicitly not supported | no native adapter; no physical matrix                                                                               | `docs/ADR-015-bluetooth-transport.md`                                                |
+| Bluetooth framed data                    | explicitly not supported | no native adapter; no physical matrix                                                                               | `docs/architecture/decisions/ADR-015-bluetooth-transport.md`                        |
 
 No row marked “implemented adapter” is promoted to stable-supported until a
 platform-specific agent supplies fresh runtime/physical evidence.
@@ -32,10 +32,10 @@ private endpoints, device identifiers, or QR screenshots.
 
 SA-012 expands the platform/build decision and physical evidence contract in
 [`NATIVE-RELEASE-OPERATIONS.md`](./NATIVE-RELEASE-OPERATIONS.md) and the
-machine-readable [`release/support-matrix.json`](../release/support-matrix.json).
+machine-readable [`release/support-matrix.json`](../../release/support-matrix.json).
 Desktop rows mean a clean package build only; iOS/Android rows cannot become
 stable-supported without all eight physical cases and a signed, fresh manifest.
 
 Bluetooth data is intentionally absent from the supported-module set. Its
-verified payload limit is zero until [ADR-015](./ADR-015-bluetooth-transport.md)
+verified payload limit is zero until [ADR-015](../architecture/decisions/ADR-015-bluetooth-transport.md)
 is reopened with physical evidence.

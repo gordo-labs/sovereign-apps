@@ -1,28 +1,18 @@
-# Sovereign Apps — Docs Map
+# Documentation map
 
-| Need                                       | Read                                                                                                                                    |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Current truth                              | [STATUS.md](./STATUS.md)                                                                                                                |
-| Publishing recommendation and product gaps | [docs/PUBLISHING-READINESS.md](./docs/PUBLISHING-READINESS.md)                                                                          |
-| Current bridge contract                    | [docs/BRIDGE-INTEGRATION.md](./docs/BRIDGE-INTEGRATION.md)                                                                              |
-| Historical baseline audit                  | [docs/AUDIT-2026-08-06.md](./docs/AUDIT-2026-08-06.md)                                                                                  |
-| Intended architecture                      | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)                                                                                          |
-| Public roadmap                             | [docs/ROADMAP.md](./docs/ROADMAP.md)                                                                                                    |
-| Iroh relay architecture and self-hosting   | [docs/RELAY-OPERATIONS.md](./docs/RELAY-OPERATIONS.md)                                                                                   |
-| Optional local AI / MCP module             | [docs/MCP-INTEGRATION.md](./docs/MCP-INTEGRATION.md)                                                                                     |
-| Native release operations                  | [docs/NATIVE-RELEASE-OPERATIONS.md](./docs/NATIVE-RELEASE-OPERATIONS.md) + [release/support-matrix.json](./release/support-matrix.json) |
+For the recommended human reading sequence, start at [docs/README.md](docs/README.md).
 
-Source ownership:
+| If you need… | Go to… |
+| --- | --- |
+| A quick project introduction | [README.md](README.md) |
+| The desktop/mobile pairing story | [Pairing walkthrough](docs/getting-started/PAIRING-FLOW.md) |
+| Current status and limitations | [STATUS.md](STATUS.md) |
+| System boundaries and module architecture | [Architecture](docs/architecture/ARCHITECTURE.md) |
+| Bridge, relay or MCP details | [Architecture docs](docs/README.md#4-go-deeper-by-topic) |
+| Optional bootstrap modules | [Modules](docs/README.md#optional-modules) |
+| Build, support and release operations | [Operations docs](docs/README.md#operating-and-releasing) |
+| Atomic V1 work and contribution tasks | [Roadmap](docs/planning/ROADMAP.md) |
+| Historical audit | [August 2026 audit](docs/history/AUDIT-2026-08-06.md) |
 
-- shared contracts: `packages/protocol/`
-- desktop adapter/reference app: `packages/electron-app/`
-- mobile adapter/reference app: `packages/react-native-app/`
-- web-presence example host: `apps/landing/` (minimal Next.js integration,
-  intentionally not a marketing landing)
-- installable web presence: `packages/web-presence/` framework-neutral package
-  plus Next.js adapter and example routes
-- planned optional MCP server: desktop-local adapter over app-owned services;
-  not implemented or shipped
-
-The `working/` folder is local-only and intentionally absent from the public
-Git history. Public documentation must not link to it.
+The `working/` directory is local-only and intentionally absent from the public
+Git history. Public documentation must not depend on it.

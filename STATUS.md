@@ -50,7 +50,7 @@ contract tests but has not been verified on physical iOS/Android hosts.
 - Bluetooth data transport: explicit SA-015 no-go. There are no native GATT,
   L2CAP or Classic adapters or physical throughput/reconnect/background
   measurements; Bluetooth remains bootstrap-only and has a zero verified
-  payload limit. See `docs/ADR-015-bluetooth-transport.md`.
+  payload limit. See `docs/architecture/decisions/ADR-015-bluetooth-transport.md`.
 - Web presence core: implemented in `packages/web-presence` with memory-only
   development adapters and framework-neutral Next route factories; it is not a
   marketing landing and is not yet a stable release.
@@ -76,7 +76,7 @@ contract tests but has not been verified on physical iOS/Android hosts.
 ### Current recommendation
 
 Publishing this source as a pre-alpha component repository is reasonable after
-reviewing [docs/PUBLISHING-READINESS.md](./docs/PUBLISHING-READINESS.md). Do not
+reviewing [publishing readiness](./docs/operations/PUBLISHING-READINESS.md). Do not
 present it as a production-ready or immediately runnable desktop/mobile app;
 the pinned native binaries still need to be generated with Rustup.
 Node-to-node transport remains optional and is not a prerequisite for the first
@@ -91,12 +91,12 @@ this pre-alpha repository.
 SA-012 now supplies the native support matrix, sanitized evidence schema,
 operator runbook, and cross-OS workflow. Physical iOS/Android and native
 artifact evidence are intentionally still blocking; see
-[`docs/NATIVE-RELEASE-OPERATIONS.md`](docs/NATIVE-RELEASE-OPERATIONS.md).
+[`docs/operations/NATIVE-RELEASE-OPERATIONS.md`](docs/operations/NATIVE-RELEASE-OPERATIONS.md).
 
 Relay self-hosting and custom-only relay profiles are now specified as V1 PRs
 V1-14–V1-17; the current host adapters do not yet support a complete custom-
 only profile. An optional local-AI MCP server is documented as a post-V1,
 selectable module with scoped authorization and six PR-sized tasks; no MCP
 runtime is implemented or shipped. See
-[`docs/RELAY-OPERATIONS.md`](docs/RELAY-OPERATIONS.md) and
-[`docs/MCP-INTEGRATION.md`](docs/MCP-INTEGRATION.md).
+[`docs/architecture/RELAY-OPERATIONS.md`](docs/architecture/RELAY-OPERATIONS.md) and
+[`docs/architecture/MCP-INTEGRATION.md`](docs/architecture/MCP-INTEGRATION.md).

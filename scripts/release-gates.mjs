@@ -9,7 +9,7 @@ const run = (command, args, label, cwd = root) => {
   if (result.status !== 0) throw new Error(`${label} failed with exit ${result.status}`);
 };
 
-const manifest = JSON.parse(await readFile(resolve(root, 'docs/support-evidence.json'), 'utf8'));
+const manifest = JSON.parse(await readFile(resolve(root, 'docs/operations/support-evidence.json'), 'utf8'));
 if (manifest.containsSecrets !== false || !manifest.schemaVersion)
   throw new Error('Invalid support evidence manifest');
 

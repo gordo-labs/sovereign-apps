@@ -18,7 +18,7 @@ meet the exit criteria below.
 
 ## Evidence and feasibility gate
 
-The machine-readable matrix is [bluetooth-transport-matrix.json](./bluetooth-transport-matrix.json).
+The machine-readable matrix is [bluetooth-transport-matrix.json](../../modules/bluetooth-transport-matrix.json).
 Public operating-system APIs expose GATT on the relevant platforms, but role
 symmetry, background execution, MTU/flow-control behavior, L2CAP/Classic
 availability and permissions differ by OS and device. The repository contains

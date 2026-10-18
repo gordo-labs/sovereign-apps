@@ -8,7 +8,7 @@ for `gordo-labs/sovereign-apps`. Do not include secrets, private keys, personal
 data, or live production endpoints in a public issue.
 
 The known security gaps in the initial baseline are listed in
-`docs/AUDIT-2026-08-06.md`; those known gaps do not need duplicate public reports.
+`docs/history/AUDIT-2026-08-06.md`; those known gaps do not need duplicate public reports.
 
 ## Release artifacts
 
@@ -19,5 +19,5 @@ or workflow artifacts. Report a suspected artifact leak privately through a
 GitHub security advisory and rotate the affected credential.
 
 The package-level release gates, anonymous fixture checks, provenance and
-rollback procedure are documented in `docs/RELEASE-POLICY.md` and
-`docs/RELEASE-CHECKLIST.md`.
+rollback procedure are documented in `docs/operations/RELEASE-POLICY.md` and
+`docs/operations/RELEASE-CHECKLIST.md`.

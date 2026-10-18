@@ -6,7 +6,7 @@ path and attaches only sanitized, signed evidence.
 
 ## Support decision
 
-The machine-readable source of truth is [`release/support-matrix.json`](../release/support-matrix.json).
+The machine-readable source of truth is [`release/support-matrix.json`](../../release/support-matrix.json).
 
 | Target | Current decision | What CI can prove | Stable requirement |
 | --- | --- | --- | --- |

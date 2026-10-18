@@ -3,7 +3,7 @@
 > Target architecture. The pre-alpha example implements the QR, Iroh and
 > one-use grant path at the framed-stream layer; native-host and device gaps are
 > listed in
-> [PUBLISHING-READINESS.md](./PUBLISHING-READINESS.md).
+> [PUBLISHING-READINESS.md](../operations/PUBLISHING-READINESS.md).
 
 ## Local-first topology
 

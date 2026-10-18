@@ -14,7 +14,7 @@ feature-detects bridge 0.3's optional TCP forwarder, and Electron validates and
 adapts its extra streams to an app-owned loopback service. The HTTP health-check
 example is enabled automatically when bridge 0.3+ is installed. See the
 [host guide](../../apps/mobile/README.md) and
-[bridge integration status](../../docs/BRIDGE-INTEGRATION.md).
+[bridge integration status](../../docs/architecture/BRIDGE-INTEGRATION.md).
 
 The camera package is already wired into the host. Rebuild the native app after
 installing dependencies; the OS prompts for camera access when scanning.

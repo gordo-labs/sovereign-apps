@@ -23,6 +23,6 @@ deterministically while leaving adopter-owned files untouched.
 
 Bluetooth is intentionally not a selectable data-transport module. SA-015 keeps
 BLE bootstrap-only until a native adapter and physical evidence matrix satisfy
-`docs/ADR-015-bluetooth-transport.md`.
+`docs/architecture/decisions/ADR-015-bluetooth-transport.md`.
 
 This tool is MIT licensed and is not published by SA-009.
