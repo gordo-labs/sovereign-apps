@@ -2,7 +2,19 @@
   "name": "sovereign-apps",
   "version": "0.0.1",
   "private": true,
-  "description": "Monorepo template for sovereign P2P apps — Electron, React Native and optional web-presence modules",
+  "description": "Open-source starter for self-hosted apps with authenticated desktop-mobile P2P over Iroh/QUIC and a roadmap for local-AI integration",
+  "keywords": [
+    "sovereign-apps",
+    "self-hosted",
+    "local-first",
+    "peer-to-peer",
+    "p2p",
+    "iroh",
+    "quic",
+    "electron",
+    "react-native",
+    "open-source-template"
+  ],
   "packageManager": "pnpm@9.15.9",
   "scripts": {
     "build": "pnpm -r --if-present --sort build",

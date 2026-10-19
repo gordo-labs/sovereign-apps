@@ -49,7 +49,7 @@ and capability-grant flow.
 
 ### Requirements
 
-- Node.js 22.12.x and pnpm 9.15.x.
+- Node.js 22.22.2 (the repository `.nvmrc`; supported range is `>=22.12 <23`) and pnpm 9.15.x.
 - A clone including the `iroh-react-native-bridge` Git submodule.
 - For iOS: Xcode and CocoaPods.
 - For Android: Android SDK and a configured emulator/device.

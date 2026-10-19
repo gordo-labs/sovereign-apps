@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Read the documentation and setup guide
+    url: https://github.com/gordo-labs/sovereign-apps/tree/main/docs
+    about: Check the project guide, current status, and known limitations before opening an issue.
+  - name: Report a security vulnerability privately
+    url: https://github.com/gordo-labs/sovereign-apps/security/advisories/new
+    about: Do not report vulnerabilities, secrets, or private pairing data in a public issue.

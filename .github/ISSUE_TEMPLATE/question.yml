@@ -1,0 +1,14 @@
+name: Question or support
+description: Ask about the project, setup, or choosing a module
+labels: ['question']
+body:
+  - type: textarea
+    attributes:
+      label: What are you trying to do?
+      description: Describe the project/module and the outcome you want.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What have you tried?
+      description: Include relevant documentation pages or sanitized errors. Do not include credentials, pairing data, peer IDs, or private addresses.

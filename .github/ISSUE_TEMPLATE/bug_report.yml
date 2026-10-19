@@ -4,15 +4,36 @@ labels: ['bug']
 body:
   - type: textarea
     attributes:
-      label: Description
-      description: What went wrong?
+      label: Summary
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction steps
+      description: List the smallest steps that reproduce the issue. Do not include real pairing codes or personal data.
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Area
+      options:
+        - Electron desktop
+        - React Native mobile
+        - Shared protocol or pairing
+        - Web presence
+        - Optional module
+        - Generator or repository tooling
+        - Other
     validations:
       required: true
   - type: input
     attributes:
-      label: Platform
-      description: Which app? (electron / react-native / landing)
+      label: Version and environment
+      description: Release/commit, OS version, and simulator/emulator/physical device. Do not include device identifiers.
+    validations:
+      required: true
   - type: textarea
     attributes:
-      label: Peer IDs
-      description: Node IDs involved (sanitized)
+      label: Sanitized logs or screenshots
+      description: Optional. Remove peer IDs, QR/deep-link contents, tokens, private addresses, account data, and file paths before posting.

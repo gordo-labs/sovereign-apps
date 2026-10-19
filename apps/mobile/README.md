@@ -9,7 +9,7 @@ bridge 0.2.0; the host uses bridge source 0.3.0.
 
 ## Requirements
 
-- Node.js 22.12.x and pnpm 9.15.x (see the repository `.nvmrc`).
+- Node.js 22.22.2 (the repository `.nvmrc`; supported range is `>=22.12 <23`) and pnpm 9.15.x.
 - Xcode and CocoaPods for iOS; Android Studio/SDK for Android.
 - Rustup with the iOS/Android Rust targets; Homebrew Rust alone cannot
   cross-compile the native bridge.

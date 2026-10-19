@@ -3,7 +3,7 @@ name: CI
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'codex/**']
+    branches: [main, 'gordo/**']
   pull_request:
     branches: [main]
 
@@ -35,6 +35,9 @@ jobs:
           cache: pnpm
       - name: Frozen install
         run: pnpm install --frozen-lockfile
+      - name: Build workspace packages required by downstream gates
+        if: contains(fromJSON('["typecheck", "package-audit", "package-install-test"]'), matrix.gate)
+        run: pnpm build
       - name: Format
         if: matrix.gate == 'format'
         run: pnpm format:check
@@ -73,5 +76,5 @@ jobs:
         run: test "${{ needs.gates.result }}" = success
       - name: Keep physical release evidence explicit
         run: |
-          test -f docs/support-evidence.json || exit 1
+          test -f docs/operations/support-evidence.json || exit 1
           echo "Physical iOS/Android evidence remains an RC requirement; CI does not fabricate it."

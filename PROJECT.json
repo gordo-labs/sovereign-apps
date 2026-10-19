@@ -3,7 +3,7 @@
   "slug": "sovereign-apps",
   "type": "public-app",
   "version": "0.0.1",
-  "description": "Pre-alpha modular component template for desktop/mobile pairing and optional Iroh communication modules",
+  "description": "Pre-alpha open-source starter for self-hosted apps with authenticated desktop-mobile P2P over Iroh/QUIC and a roadmap for optional local-AI capabilities",
   "status": "pre-alpha",
   "frequency": "weekly",
   "lastAction": "2026-10-16T18:36:06Z",
